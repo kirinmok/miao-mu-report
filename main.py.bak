@@ -1,0 +1,179 @@
+import os
+import time
+import requests
+import pandas as pd
+import pandas_ta as ta
+from datetime import datetime, timedelta
+from FinMind.data import DataLoader
+
+# ==========================================
+# 1) 讀取環境變數（不要硬寫在程式裡）
+# ==========================================
+LINE_CHANNEL_TOKEN = os.getenv("LINE_CHANNEL_TOKEN", "").strip()
+YOUR_USER_ID = os.getenv("LINE_USER_ID", "").strip()
+FINMIND_TOKEN = os.getenv("FINMIND_API_TOKEN", "").strip()
+
+def assert_env():
+    missing = []
+    if not LINE_CHANNEL_TOKEN:
+        missing.append("LINE_CHANNEL_TOKEN")
+    if not YOUR_USER_ID:
+        missing.append("LINE_USER_ID")
+    if not FINMIND_TOKEN:
+        missing.append("FINMIND_API_TOKEN")
+    if missing:
+        print("❌ 缺少必要環境變數：", ", ".join(missing))
+        print("請先設定後再執行（下面我有給你可說明的設定方式）。")
+        raise SystemExit(1)
+
+# ==========================================
+# 2) LINE Push
+# ==========================================
+def send_line_push(msg: str):
+    url = "https://api.line.me/v2/bot/message/push"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {LINE_CHANNEL_TOKEN}",
+    }
+    payload = {
+        "to": YOUR_USER_ID,
+        "messages": [{"type": "text", "text": msg}],
+    }
+
+    try:
+        res = requests.post(url, headers=headers, json=payload, timeout=20)
+        if res.status_code == 200:
+            print("✅ LINE 通知已發送成功！")
+        else:
+            print(f"❌ LINE 發送失敗: {res.status_code} - {res.text}")
+    except Exception as e:
+        print(f"❌ LINE 連線錯誤: {e}")
+
+# ==========================================
+# 3) 分析器
+# ==========================================
+class ProAnalyzer:
+    def __init__(self, finmind_token: str):
+        self.dl = DataLoader()
+        # ✅ 明確登入 FinMind（你 v2 log 那段就是這個）
+        self.dl.login_by_token(finmind_token)
+
+    def analyze_stock(self, stock_id: str, stock_name: str):
+        print(f"🚀 正在分析: {stock_name} ({stock_id})...")
+        try:
+            end_date = datetime.now().strftime("%Y-%m-%d")
+            start_date = (datetime.now() - timedelta(days=180)).strftime("%Y-%m-%d")
+
+            df = self.dl.taiwan_stock_daily(
+                stock_id=stock_id,
+                start_date=start_date,
+                end_date=end_date
+            )
+
+            if df is None or df.empty:
+                print(f"❌ 查無數據: {stock_name}")
+                return None
+
+            # 確保欄位排序（FinMind 通常會有 date/close）
+            df = df.sort_values("date").reset_index(drop=True)
+
+            # 技術指標
+            df.ta.rsi(length=14, append=True)
+            df.ta.macd(fast=12, slow=26, signal=9, append=True)
+
+            latest = df.iloc[-1]
+            date_str = str(latest["date"])
+            close = float(latest["close"])
+
+            rsi = float(latest["RSI_14"]) if not pd.isna(latest["RSI_14"]) else 50.0
+            macd = float(latest["MACD_12_26_9"]) if not pd.isna(latest["MACD_12_26_9"]) else 0.0
+            signal = float(latest["MACDs_12_26_9"]) if not pd.isna(latest["MACDs_12_26_9"]) else 0.0
+
+            # 評分
+            score = 5.0
+            reasons = []
+
+            if rsi > 80:
+                score -= 2.0
+                reasons.append(f"⚠️ RSI過熱({rsi:.0f})")
+            elif rsi < 30:
+                score += 2.0
+                reasons.append(f"💎 RSI超賣({rsi:.0f})")
+            elif rsi > 60:
+                score += 0.5
+                reasons.append(f"📈 動能強({rsi:.0f})")
+            else:
+                reasons.append(f"RSI({rsi:.0f})")
+
+            if macd > signal:
+                score += 1.5
+                reasons.append("🐂 MACD金叉")
+            else:
+                score -= 1.5
+                reasons.append("🐻 MACD死叉")
+
+            score = max(1.0, min(10.0, score))
+
+            if score >= 7.5:
+                rec = "🟢 強力買進"
+            elif score >= 6.0:
+                rec = "🔵 偏多操作"
+            elif score <= 3.5:
+                rec = "🔴 建議賣出"
+            else:
+                rec = "🟡 觀望持有"
+
+            return {
+                "name": stock_name,
+                "id": stock_id,
+                "date": date_str,
+                "price": close,
+                "score": score,
+                "rec": rec,
+                "reasons": " ".join(reasons),
+            }
+
+        except Exception as e:
+            print(f"❌ 分析錯誤: {stock_name} - {e}")
+            return None
+
+# ==========================================
+# 4) 主程式
+# ==========================================
+def main():
+    assert_env()
+
+    print("\n" + "=" * 40)
+    print("  莫老師 AI 股市日報 v3.0 (LINE Push版)")
+    print("=" * 40 + "\n")
+
+    my_portfolio = [
+        ("2330", "台積電"),
+        ("2317", "鴻海"),
+        ("2603", "長榮"),
+        ("0050", "元大台灣50"),
+        ("1303", "南亞"),
+    ]
+
+    analyzer = ProAnalyzer(FINMIND_TOKEN)
+
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    line_msg = f"📊 【股市分析日報】\n📅 {current_date}\n{'-'*15}\n"
+
+    for stock_id, stock_name in my_portfolio:
+        res = analyzer.analyze_stock(stock_id, stock_name)
+        if res:
+            line_msg += f"\n📌 {res['name']} ({res['id']})\n"
+            line_msg += f"收盤: {res['price']:.2f} ({res['rec']})\n"
+            line_msg += f"評分: {res['score']:.1f} | {res['reasons']}\n"
+        time.sleep(1)
+
+    line_msg += f"\n{'-'*15}\n💡 投資風險請自負"
+
+    print("\n" + line_msg)
+    print("\n🚀 正在發送 LINE 通知...")
+    send_line_push(line_msg)
+
+if __name__ == "__main__":
+    main()
+

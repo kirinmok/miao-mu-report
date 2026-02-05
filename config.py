@@ -1,0 +1,5 @@
+"""配置檔 - 只存放設定"""
+
+FINMIND_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+LINE_CHANNEL_TOKEN = "QalOukV700s95dfs9Z0ggjhzw53HW9LcVsZe8yRAUEgvUUnWGiPIeOgWPrVieknupLGrnlP2puwNKBhyp5yNoa6Hlp4XS6thhIbi/yvqXMGx2lItRz0Ouve0JSuEApu5+srWfAAS6K0aCK0NBSkgFgdB04t89/1O/w1cDnyilFU="
+LINE_USER_ID = "U1da8a38fcdd5e02bb2bdc4b39b486ffa"

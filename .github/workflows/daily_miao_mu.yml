@@ -1,0 +1,59 @@
+# 喵姆 AI 股市偵測站 - 每日自動執行工作流
+# 台灣時間 15:30 (UTC 07:30) 執行
+
+name: 每日喵姆股市分析
+
+on:
+  schedule:
+    # UTC 07:30 = 台灣時間 15:30
+    - cron: '30 7 * * 1-5'  # 週一至週五
+  workflow_dispatch:  # 允許手動觸發
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  analyze-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout 程式碼
+        uses: actions/checkout@v4
+      
+      - name: 🐍 設定 Python 環境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: 📦 安裝套件
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: 🐱 執行喵姆分析
+        env:
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
+          USER_ID: ${{ secrets.USER_ID }}
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          python main.py
+      
+      - name: 📄 準備 GitHub Pages
+        run: |
+          mkdir -p gh-pages
+          cp index.html gh-pages/
+          # 如果有其他靜態資源也複製過去
+          # cp -r assets gh-pages/ 2>/dev/null || true
+      
+      - name: 🚀 部署到 GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages
+          publish_branch: gh-pages
+          force_orphan: true
+          commit_message: '🐱 喵姆報表更新 ${{ github.run_id }}'

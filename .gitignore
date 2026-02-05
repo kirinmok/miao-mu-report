@@ -1,0 +1,58 @@
+# 環境變數與金鑰
+.env
+.env.*
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虛擬環境
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS 檔案
+.DS_Store
+Thumbs.db
+
+# 測試與快取
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# 輸出檔案（可選擇性排除）
+# research/
+# *.xlsx
+
+# 臨時檔案
+*.tmp
+*.log

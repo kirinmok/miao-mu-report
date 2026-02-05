@@ -1,0 +1,95 @@
+from FinMind.data import DataLoader
+from datetime import datetime, timedelta
+import time
+
+class SimpleAnalyzer:
+    @staticmethod
+    def analyze_stock(stock_id, stock_name):
+        print(f"\n{'='*60}")
+        print(f"正在分析: {stock_name} ({stock_id})")
+        print(f"{'='*60}\n")
+        
+        try:
+            print("📊 正在獲取股價數據...")
+            end_date = datetime.now().strftime('%Y-%m-%d')
+            start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+            
+            df_price =DataLoader ().taiwan_stock_daily(
+                stock_id=stock_id,
+                start_date=start_date,
+                end_date=end_date
+            )
+            
+            if df_price.empty:
+                print(f"❌ 無法獲取{stock_name}的股價數據\n")
+                return None
+            
+            latest_price = df_price.iloc[-1]['close']
+            price_change = ((latest_price - df_price.iloc[0]['close']) / df_price.iloc[0]['close']) * 100
+            
+            print(f"✅ 成功獲取 {len(df_price)} 天的數據")
+            print(f"   最新收盤價: {latest_price:.2f}")
+            print(f"   近90天漲跌: {price_change:+.2f}%\n")
+            
+            score = 5.0
+            if price_change > 10:
+                score += 1.5
+            elif price_change > 0:
+                score += 0.5
+            
+            score = max(1, min(10, score))
+            
+            if score >= 7:
+                recommendation = "🟢 可以考慮買入"
+            elif score >= 5:
+                recommendation = "🟡 持有觀望"
+            else:
+                recommendation = "🔴 考慮賣出"
+            
+            print(f"{'─'*60}")
+            print(f"📊 評分: {score:.1f}/10")
+            print(f"💡 建議: {recommendation}")
+            print(f"{'='*60}\n")
+            
+            return {
+                'stock_id': stock_id,
+                'stock_name': stock_name,
+                'score': score,
+                'recommendation': recommendation,
+                'latest_price': latest_price,
+                'price_change': price_change
+            }
+            
+        except Exception as e:
+            print(f"❌ 錯誤: {e}\n")
+            return None
+
+def main():
+    print("\n" + "="*60)
+    print("     股票分析系統 v1.0")
+    print("="*60 + "\n")
+    
+    test_portfolio = [
+        ("2330", "台積電"),
+        ("1303", "南亞"),
+        ("2317", "鴻海"),
+    ]
+    
+    results = []
+    for stock_id, stock_name in test_portfolio:
+        result = SimpleAnalyzer.analyze_stock(stock_id, stock_name)
+        if result:
+            results.append(result)
+        time.sleep(1)
+    
+    if results:
+        print("\n" + "="*60)
+        print("           總結報告")
+        print("="*60 + "\n")
+        results.sort(key=lambda x: x['score'], reverse=True)
+        for i, r in enumerate(results, 1):
+            print(f"{i}. {r['stock_name']}({r['stock_id']}): {r['score']:.1f}/10 - {r['recommendation']}")
+        print("\n")
+
+if __name__ == "__main__":
+    main()
