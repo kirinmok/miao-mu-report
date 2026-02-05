@@ -586,14 +586,14 @@ def generate_index_html(data):
     </head>
     <body class="p-4 md:p-8">
         <div class="max-w-7xl mx-auto">
-            <header class="mb-12 flex flex-col md:flex-row justify-between items-center">
+            <header class="mb-12 flex flex-col md:flex-row items-center md:items-end gap-6">
                 <div class="text-center md:text-left">
                     <h1 class="text-4xl font-bold gradient-text mb-2">
                         🐱 喵姆 AI 股市偵測站
                     </h1>
                     <p class="text-gray-400">基於多維度指標與 AI 調研的自動化決策系統 • {date_str}</p>
                 </div>
-                <div class="mt-4 md:mt-0 flex gap-3">
+                <div class="mt-4 md:mt-0 flex gap-3 md:mb-1">
                    <span class="px-4 py-2 rounded-full bg-cyan-900/30 text-cyan-400 text-sm border border-cyan-800/50 backdrop-blur">
                      🎯 喵姆評分系統
                    </span>
