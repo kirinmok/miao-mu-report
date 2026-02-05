@@ -659,120 +659,152 @@ def generate_index_html(data):
             
             function renderCards() {{
                 const container = document.getElementById('cards-container');
+                container.innerHTML = '';
                 
-                stockData.forEach((item, index) => {{
-                    const baseScore = item['評分'];
-                    const miaoScore = item['miao_score'] || baseScore;
-                    const scoreClass = getScoreClass(miaoScore);
-                    const scoreColor = getScoreColor(miaoScore);
-                    const aiContent = item.ai_insight || '📊 評分未達觸發門檻，暫無深度分析';
-                    
-                    const card = document.createElement('div');
-                    card.className = 'glass-card rounded-2xl overflow-hidden';
-                    const recClass = item['建議類別'] || 'action-hold';
-                    card.innerHTML = `
-                        <div class="p-6">
-                            <!-- 行動建議大標籤 - 放在最上方 -->
-                            <div class="mb-4 text-center">
-                                <span class="action-badge ${{recClass}}">${{item['建議']}}</span>
-                            </div>
-                            
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h2 class="text-xl font-bold text-white">${{item['名稱']}} <span class="text-sm text-gray-500 font-normal">${{item['代號']}}</span></h2>
-                                    <div class="text-2xl font-mono mt-1 text-gray-200">$${{item['收盤價'].toFixed(2)}}</div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-sm text-gray-400">喵姆評分</div>
-                                    <div class="text-2xl font-bold ${{scoreClass}}">${{miaoScore}}</div>
-                                </div>
-                            </div>
+                // 1. 建立現有資料的 Map 方便查找
+                const stockMap = new Map();
+                stockData.forEach(item => stockMap.set(item['代號'], item));
+                
+                // 2. 根據 Watchlist 順序渲染
+                // 如果 Watchlist 為空（初次使用或未設定），則顯示所有 data
+                const renderList = watchlist.length > 0 ? watchlist : stockData.map(s => ({{ticker: s['代號'], name: s['名稱']}}));
 
-                            <div class="flex border-b border-gray-700/50 mb-4">
-                                <button onclick="switchTab(${{index}}, 'data')" id="tab-data-${{index}}" class="tab-btn active px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200">📊 雷達分析</button>
-                                <button onclick="switchTab(${{index}}, 'ai')" id="tab-ai-${{index}}" class="tab-btn px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200">🤖 AI 觀點</button>
-                            </div>
-
-                            <div id="view-data-${{index}}" class="view-content block">
-                                <div class="chart-container h-52 mb-4">
-                                    <canvas id="chart-${{index}}"></canvas>
-                                    <div class="kirin-center">
-                                        <div class="kirin-value ${{scoreClass}}">${{miaoScore}}</div>
-                                        <div class="kirin-label">喵姆評分</div>
-                                    </div>
-                                </div>
-                                <div class="space-y-2 text-sm">
-                                    <div class="flex justify-between p-3 bg-gray-800/30 rounded-lg border border-gray-700/30">
-                                        <span class="text-gray-400">📈 外資動向</span>
-                                        <span class="${{item['外資動向'].includes('-') ? 'text-red-400' : 'text-green-400'}} font-mono font-medium">${{item['外資動向']}}</span>
-                                    </div>
-                                    <div class="p-3 bg-gray-800/30 rounded-lg border border-gray-700/30 text-xs text-gray-300 leading-relaxed">
-                                        ${{item['詳細理由']}}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div id="view-ai-${{index}}" class="view-content hidden">
-                                <div class="p-4 bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-xl border border-blue-500/20 mb-4">
-                                    <p class="text-xs font-semibold text-cyan-400 mb-2 uppercase tracking-wider">🤖 Perplexity AI 深度分析</p>
-                                    <p class="text-gray-200 leading-relaxed text-sm">${{aiContent}}</p>
-                                </div>
-                                <a href="https://www.perplexity.ai/search?q=分析${{item['名稱']}}${{item['代號']}}今日動態" target="_blank" 
-                                   class="block w-full text-center py-3 rounded-xl bg-gradient-to-r from-cyan-600/80 to-purple-600/80 hover:from-cyan-500 hover:to-purple-500 transition-all text-sm font-medium text-white shadow-lg">
-                                    🔍 前往 Perplexity 深度追蹤
-                                </a>
-                            </div>
-                        </div>
-                    `;
-                    container.appendChild(card);
+                renderList.forEach((wItem, index) => {{
+                    const item = stockMap.get(wItem.ticker);
                     
-                    // Render Radar Chart with center Kirin Index
-                    const ctx = document.getElementById('chart-' + index);
-                    if (ctx && item.chart_data) {{
-                        new Chart(ctx, {{
-                            type: 'radar',
-                            data: {{
-                                labels: ['籌碼面', '季線趨勢', 'MACD', 'RSI', '綜合分'],
-                                datasets: [{{
-                                    label: '技術指標',
-                                    data: [
-                                        item.chart_data.chips || 50,
-                                        item.chart_data.tech_ma || 50,
-                                        item.chart_data.tech_macd || 50,
-                                        item.chart_data.tech_rsi || 50,
-                                        item.chart_data.score || 50
-                                    ],
-                                    backgroundColor: scoreColor + '22',
-                                    borderColor: scoreColor,
-                                    borderWidth: 2,
-                                    pointBackgroundColor: scoreColor,
-                                    pointBorderColor: '#fff',
-                                    pointBorderWidth: 1,
-                                    pointRadius: 4
-                                }}]
-                            }},
-                            options: {{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {{
-                                    r: {{
-                                        angleLines: {{ color: 'rgba(255, 255, 255, 0.08)' }},
-                                        grid: {{ color: 'rgba(255, 255, 255, 0.08)', circular: true }},
-                                        pointLabels: {{ 
-                                            color: '#94a3b8', 
-                                            font: {{ size: 10, family: 'Noto Sans TC' }},
-                                            padding: 15
+                    if (item) {{
+                        // A. 有資料的卡片 (Existing Logic)
+                        const baseScore = item['評分'];
+                        const miaoScore = item['miao_score'] || baseScore;
+                        const scoreClass = getScoreClass(miaoScore);
+                        const scoreColor = getScoreColor(miaoScore);
+                        const aiContent = item.ai_insight || '📊 評分未達觸發門檻，暫無深度分析';
+                        const recClass = item['建議類別'] || 'action-hold';
+                        
+                        const card = document.createElement('div');
+                        card.className = 'glass-card rounded-2xl overflow-hidden';
+                        card.innerHTML = `
+                            <div class="p-6">
+                                <div class="mb-4 text-center">
+                                    <span class="action-badge ${{recClass}}">${{item['建議']}}</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h2 class="text-xl font-bold text-white">${{item['名稱']}} <span class="text-sm text-gray-500 font-normal">${{item['代號']}}</span></h2>
+                                        <div class="text-2xl font-mono mt-1 text-gray-200">$${{item['收盤價'].toFixed(2)}}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-sm text-gray-400">喵姆評分</div>
+                                        <div class="text-2xl font-bold ${{scoreClass}}">${{miaoScore}}</div>
+                                    </div>
+                                </div>
+
+                                <div class="flex border-b border-gray-700/50 mb-4">
+                                    <button onclick="switchTab('${{wItem.ticker}}', 'data')" id="tab-data-${{wItem.ticker}}" class="tab-btn active px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200">📊 雷達分析</button>
+                                    <button onclick="switchTab('${{wItem.ticker}}', 'ai')" id="tab-ai-${{wItem.ticker}}" class="tab-btn px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200">🤖 AI 觀點</button>
+                                </div>
+
+                                <div id="view-data-${{wItem.ticker}}" class="view-content block">
+                                    <div class="chart-container h-52 mb-4">
+                                        <canvas id="chart-${{wItem.ticker}}"></canvas>
+                                        <div class="kirin-center">
+                                            <div class="kirin-value ${{scoreClass}}">${{miaoScore}}</div>
+                                            <div class="kirin-label">喵姆評分</div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between p-3 bg-gray-800/30 rounded-lg border border-gray-700/30">
+                                            <span class="text-gray-400">📈 外資動向</span>
+                                            <span class="${{item['外資動向'].includes('-') ? 'text-red-400' : 'text-green-400'}} font-mono font-medium">${{item['外資動向']}}</span>
+                                        </div>
+                                        <div class="p-3 bg-gray-800/30 rounded-lg border border-gray-700/30 text-xs text-gray-300 leading-relaxed">
+                                            ${{item['詳細理由']}}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="view-ai-${{wItem.ticker}}" class="view-content hidden">
+                                    <div class="p-4 bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-xl border border-blue-500/20 mb-4">
+                                        <p class="text-xs font-semibold text-cyan-400 mb-2 uppercase tracking-wider">🤖 Perplexity AI 深度分析</p>
+                                        <p class="text-gray-200 leading-relaxed text-sm">${{aiContent}}</p>
+                                    </div>
+                                    <a href="https://www.perplexity.ai/search?q=分析${{item['名稱']}}${{item['代號']}}今日動態" target="_blank" 
+                                       class="block w-full text-center py-3 rounded-xl bg-gradient-to-r from-cyan-600/80 to-purple-600/80 hover:from-cyan-500 hover:to-purple-500 transition-all text-sm font-medium text-white shadow-lg">
+                                        🔍 前往 Perplexity 深度追蹤
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                        
+                        // Render Radar Chart
+                        setTimeout(() => {{
+                            const ctx = document.getElementById('chart-' + wItem.ticker);
+                            if (ctx && item.chart_data) {{
+                                new Chart(ctx, {{
+                                    type: 'radar',
+                                    data: {{
+                                        labels: ['籌碼面', '季線趨勢', 'MACD', 'RSI', '綜合分'],
+                                        datasets: [{{
+                                            label: '技術指標',
+                                            data: [
+                                                item.chart_data.chips || 50,
+                                                item.chart_data.tech_ma || 50,
+                                                item.chart_data.tech_macd || 50,
+                                                item.chart_data.tech_rsi || 50,
+                                                item.chart_data.score || 50
+                                            ],
+                                            backgroundColor: scoreColor + '22',
+                                            borderColor: scoreColor,
+                                            borderWidth: 2,
+                                            pointBackgroundColor: scoreColor,
+                                            pointBorderColor: '#fff',
+                                            pointBorderWidth: 1,
+                                            pointRadius: 4
+                                        }}]
+                                    }},
+                                    options: {{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        scales: {{
+                                            r: {{
+                                                angleLines: {{ color: 'rgba(255, 255, 255, 0.08)' }},
+                                                grid: {{ color: 'rgba(255, 255, 255, 0.08)', circular: true }},
+                                                pointLabels: {{ 
+                                                    color: '#94a3b8', 
+                                                    font: {{ size: 10, family: 'Noto Sans TC' }},
+                                                    padding: 15
+                                                }},
+                                                suggestedMin: 0,
+                                                suggestedMax: 100,
+                                                ticks: {{ display: false }}
+                                            }}
                                         }},
-                                        suggestedMin: 0,
-                                        suggestedMax: 100,
-                                        ticks: {{ display: false }}
+                                        plugins: {{ 
+                                            legend: {{ display: false }}
+                                        }}
                                     }}
-                                }},
-                                plugins: {{ 
-                                    legend: {{ display: false }}
-                                }}
+                                }});
                             }}
-                        }});
+                        }}, 0);
+
+                    }} else {{
+                        // B. 待更新卡片 (Pending Card)
+                        const card = document.createElement('div');
+                        card.className = 'glass-card rounded-2xl overflow-hidden opacity-70 border-2 border-dashed border-gray-600';
+                        card.innerHTML = `
+                            <div class="p-8 text-center h-full flex flex-col justify-center items-center">
+                                <h2 class="text-xl font-bold text-gray-400 mb-2">${{wItem.name}} <span class="text-sm font-normal">${{wItem.ticker}}</span></h2>
+                                <div class="text-4xl mb-4">⏳</div>
+                                <p class="text-gray-300 font-medium mb-2">已加入追蹤清單</p>
+                                <p class="text-xs text-gray-500 mb-6">請執行程式以獲取最新分析數據</p>
+                                <div class="text-xs text-gray-600 p-3 bg-black/20 rounded-lg">
+                                    提示：此為靜態網頁，需由後端 Python 更新資料
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(card);
                     }}
                 }});
             }}
