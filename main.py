@@ -214,16 +214,26 @@ def main():
         masked_key = PERPLEXITY_API_KEY[:4] + "***" + PERPLEXITY_API_KEY[-4:] if len(PERPLEXITY_API_KEY) > 8 else "***"
         print(f"✅ 成功讀取 API Key (長度: {len(PERPLEXITY_API_KEY)}): {masked_key}")
 
-    my_portfolio = [
-        ("2330", "台積電"), ("2317", "鴻海"), ("0050", "元大台灣50"),
-        ("0056", "元大高股息"), ("00919", "群益高股息"),
-        ("1303", "南亞"), ("2603", "長榮"), ("2615", "萬海"),
-        ("1609", "大亞"), ("3090", "日電貿"), ("6715", "嘉基"), ("1519", "華城"),
-        ("3293", "鈊象"), ("5381", "合正"), ("8011", "台通"), ("4763", "材料-KY"),
-        ("3265", "台星科"), ("2376", "技嘉"), ("2379", "瑞昱"), ("3034", "聯詠"),
-        ("7749", "意騰-KY"), ("3035", "智原"), ("6197", "佳必琪"), ("3680", "家登"),
-        ("3088", "艾訊"), ("6579", "研揚")
-    ]
+    # 載入追蹤清單
+    watchlist_path = os.path.join(os.path.dirname(__file__), "watchlist.json")
+    if os.path.exists(watchlist_path):
+        try:
+            with open(watchlist_path, "r", encoding="utf-8") as f:
+                watchlist_data = json.load(f)
+            my_portfolio = [(s["ticker"], s["name"]) for s in watchlist_data.get("stocks", [])]
+            print(f"📋 已載入追蹤清單：{len(my_portfolio)} 檔股票")
+        except Exception as e:
+            print(f"⚠️ 讀取 watchlist.json 失敗: {e}，使用預設清單")
+            my_portfolio = [
+                ("2330", "台積電"), ("2317", "鴻海"), ("0050", "元大台灣50"),
+                ("0056", "元大高股息"), ("00919", "群益高股息")
+            ]
+    else:
+        print("⚠️ 找不到 watchlist.json，使用預設清單")
+        my_portfolio = [
+            ("2330", "台積電"), ("2317", "鴻海"), ("0050", "元大台灣50"),
+            ("0056", "元大高股息"), ("00919", "群益高股息")
+        ]
     
     excel_data = []
     line_msg = f"🐱 【喵姆 AI 股市偵測站】\n📅 {datetime.now().strftime('%Y-%m-%d')}\n基於多維度指標與 AI 調研的自動化決策系統\n"
@@ -476,6 +486,102 @@ def generate_index_html(data):
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
             }}
+            /* 側邊欄樣式 */
+            .sidebar {{
+                position: fixed;
+                right: 0;
+                top: 0;
+                width: 320px;
+                height: 100vh;
+                background: rgba(15, 23, 42, 0.98);
+                border-left: 1px solid rgba(255,255,255,0.1);
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                z-index: 1000;
+                overflow-y: auto;
+                padding: 1.5rem;
+            }}
+            .sidebar.open {{
+                transform: translateX(0);
+            }}
+            .sidebar-toggle {{
+                position: fixed;
+                right: 20px;
+                top: 20px;
+                z-index: 1001;
+                background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+                border: none;
+                border-radius: 12px;
+                padding: 12px 20px;
+                color: white;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
+            }}
+            .watchlist-input {{
+                width: 100%;
+                padding: 12px;
+                background: rgba(30, 41, 59, 0.8);
+                border: 1px solid rgba(255,255,255,0.2);
+                border-radius: 8px;
+                color: white;
+                font-size: 14px;
+                margin-bottom: 10px;
+            }}
+            .watchlist-input:focus {{
+                outline: none;
+                border-color: var(--accent-cyan);
+            }}
+            .watchlist-btn {{
+                width: 100%;
+                padding: 12px;
+                background: linear-gradient(135deg, #10b981, #059669);
+                border: none;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                cursor: pointer;
+                margin-bottom: 20px;
+            }}
+            .watchlist-btn:hover {{
+                opacity: 0.9;
+            }}
+            .watchlist-item {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 12px;
+                background: rgba(30, 41, 59, 0.6);
+                border-radius: 8px;
+                margin-bottom: 8px;
+                border: 1px solid rgba(255,255,255,0.1);
+            }}
+            .watchlist-item:hover {{
+                border-color: rgba(255,255,255,0.2);
+            }}
+            .watchlist-delete {{
+                background: rgba(239, 68, 68, 0.2);
+                border: none;
+                color: #f87171;
+                padding: 6px 10px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+            }}
+            .watchlist-delete:hover {{
+                background: rgba(239, 68, 68, 0.4);
+            }}
+            .export-btn {{
+                width: 100%;
+                padding: 12px;
+                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                border: none;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                cursor: pointer;
+                margin-top: 20px;
+            }}
         </style>
     </head>
     <body class="p-4 md:p-8">
@@ -503,6 +609,37 @@ def generate_index_html(data):
             <footer class="mt-12 text-center text-gray-600 text-sm">
                 <p>Powered by Perplexity AI & FinMind | 本報告僅供參考，投資風險請自負 | 喵姆 AI 股市偵測站</p>
             </footer>
+        </div>
+
+        <!-- 側邊欄切換按鈕 -->
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+            📋 追蹤清單
+        </button>
+
+        <!-- 側邊欄 -->
+        <div id="sidebar" class="sidebar">
+            <h2 class="text-xl font-bold text-white mb-4">📋 追蹤清單管理</h2>
+            
+            <div class="mb-6">
+                <input type="text" id="tickerInput" class="watchlist-input" placeholder="輸入股票代號 (如 2330)">
+                <input type="text" id="nameInput" class="watchlist-input" placeholder="輸入股票名稱 (如 台積電)">
+                <button class="watchlist-btn" onclick="addStock()">➕ 新增追蹤</button>
+            </div>
+
+            <div class="text-sm text-gray-400 mb-2">目前追蹤 (<span id="stockCount">0</span> 檔)</div>
+            <div id="watchlistContainer"></div>
+
+            <button class="export-btn" onclick="exportWatchlist()">📥 匯出 watchlist.json</button>
+            
+            <div class="mt-4">
+                <label class="text-sm text-gray-400 block mb-2">📤 匯入設定檔</label>
+                <input type="file" id="importFile" accept=".json" onchange="importWatchlist(event)" 
+                       class="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white file:cursor-pointer">
+            </div>
+            
+            <button class="sidebar-toggle" style="position:relative; right:auto; top:auto; margin-top:20px; width:100%;" onclick="toggleSidebar()">
+                ✖️ 關閉
+            </button>
         </div>
 
         <script>
@@ -650,6 +787,115 @@ def generate_index_html(data):
                 document.getElementById('tab-' + tab + '-' + index).classList.add('active');
             }}
             
+            // ========== 追蹤清單管理 ==========
+            let watchlist = JSON.parse(localStorage.getItem('miaomo_watchlist')) || [];
+            
+            // 初始化：從 stockData 載入現有追蹤
+            if (watchlist.length === 0 && stockData.length > 0) {{
+                stockData.forEach(item => {{
+                    watchlist.push({{ ticker: item['代號'], name: item['名稱'] }});
+                }});
+                saveWatchlist();
+            }}
+            
+            function toggleSidebar() {{
+                document.getElementById('sidebar').classList.toggle('open');
+            }}
+            
+            function renderWatchlist() {{
+                const container = document.getElementById('watchlistContainer');
+                container.innerHTML = '';
+                document.getElementById('stockCount').textContent = watchlist.length;
+                
+                watchlist.forEach((stock, index) => {{
+                    const item = document.createElement('div');
+                    item.className = 'watchlist-item';
+                    item.innerHTML = `
+                        <span class="text-white">
+                            <span class="text-cyan-400 font-mono">${{stock.ticker}}</span>
+                            <span class="text-gray-400 ml-2">${{stock.name}}</span>
+                        </span>
+                        <button class="watchlist-delete" onclick="removeStock(${{index}})">❌</button>
+                    `;
+                    container.appendChild(item);
+                }});
+            }}
+            
+            function addStock() {{
+                const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+                const name = document.getElementById('nameInput').value.trim();
+                
+                if (!ticker) {{
+                    alert('請輸入股票代號');
+                    return;
+                }}
+                
+                // 檢查是否已存在
+                if (watchlist.some(s => s.ticker === ticker)) {{
+                    alert('此股票已在追蹤清單中');
+                    return;
+                }}
+                
+                watchlist.push({{ ticker, name: name || ticker }});
+                saveWatchlist();
+                renderWatchlist();
+                
+                document.getElementById('tickerInput').value = '';
+                document.getElementById('nameInput').value = '';
+            }}
+            
+            function removeStock(index) {{
+                if (confirm(`確定要移除 ${{watchlist[index].name}} (${{watchlist[index].ticker}}) 嗎？`)) {{
+                    watchlist.splice(index, 1);
+                    saveWatchlist();
+                    renderWatchlist();
+                }}
+            }}
+            
+            function saveWatchlist() {{
+                localStorage.setItem('miaomo_watchlist', JSON.stringify(watchlist));
+            }}
+            
+            function exportWatchlist() {{
+                const data = {{
+                    stocks: watchlist,
+                    updated_at: new Date().toISOString()
+                }};
+                const blob = new Blob([JSON.stringify(data, null, 2)], {{ type: 'application/json' }});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'watchlist.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                alert('已下載 watchlist.json\\n請將檔案放入專案目錄，下次執行 main.py 時將使用此清單');
+            }}
+            
+            function importWatchlist(event) {{
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {{
+                    try {{
+                        const data = JSON.parse(e.target.result);
+                        if (data.stocks && Array.isArray(data.stocks)) {{
+                            watchlist = data.stocks;
+                            saveWatchlist();
+                            renderWatchlist();
+                            alert('匯入成功！共 ' + watchlist.length + ' 檔股票');
+                        }} else {{
+                            alert('檔案格式錯誤');
+                        }}
+                    }} catch (err) {{
+                        alert('無法解析 JSON 檔案');
+                    }}
+                }};
+                reader.readAsText(file);
+            }}
+            
+            // 初始化
+            renderWatchlist();
             renderCards();
         </script>
     </body>
