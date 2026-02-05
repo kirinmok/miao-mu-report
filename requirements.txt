@@ -5,3 +5,5 @@ python-dotenv>=1.0.0
 finmind==1.9.4
 openpyxl>=3.1.0
 pyngrok>=7.0.0
+
+tqdm>=4.0.0
