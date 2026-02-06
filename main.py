@@ -280,6 +280,9 @@ def generate_index_html(data):
             .action-sell {{ background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: 2px solid #f87171; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }}
             .action-hold {{ background: linear-gradient(135deg, #64748b, #475569); color: white; border: 2px solid #94a3b8; }}
             .action-bullish {{ background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: 2px solid #fbbf24; }}
+            
+            /* WYSIWYG 編輯模式樣式 */
+            .editable-active {{ border: 1px dashed #fbbf24; background: rgba(251, 191, 36, 0.1); cursor: text; }}
         </style>
     </head>
     <body class="p-4 md:p-8">
@@ -289,10 +292,41 @@ def generate_index_html(data):
         </header>
         
         <div id="container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 max-w-7xl mx-auto"></div>
+        
+        <!-- 浮動編輯按鈕 -->
+        <button onclick="toggleEditMode()" id="editBtn" class="fixed bottom-6 right-6 bg-indigo-600 hover:bg-indigo-500 text-white p-4 rounded-full shadow-lg transition-all z-50 flex items-center gap-2">
+            ✏️ <span>進入編輯模式</span>
+        </button>
 
         <script>
             const data = {json_data};
             const container = document.getElementById('container');
+            let isEditMode = false;
+
+            function toggleEditMode() {{
+                isEditMode = !isEditMode;
+                const btn = document.getElementById('editBtn');
+                const editables = document.querySelectorAll('.editable-text');
+                
+                if (isEditMode) {{
+                    btn.innerHTML = '💾 <span>退出並保存(本地)</span>';
+                    btn.classList.add('bg-green-600');
+                    btn.classList.remove('bg-indigo-600');
+                    editables.forEach(el => {{
+                        el.contentEditable = 'true';
+                        el.classList.add('editable-active');
+                    }});
+                }} else {{
+                    btn.innerHTML = '✏️ <span>進入編輯模式</span>';
+                    btn.classList.remove('bg-green-600');
+                    btn.classList.add('bg-indigo-600');
+                    editables.forEach(el => {{
+                        el.contentEditable = 'false';
+                        el.classList.remove('editable-active');
+                    }});
+                    alert('你可以直接列印或截圖保存修改後的報告！');
+                }}
+            }}
             
             function switchTab(idx, tab) {{
                 document.getElementById(`content-radar-${{idx}}`).classList.add('hidden');
@@ -354,7 +388,7 @@ def generate_index_html(data):
                                     <span class="${{item['投信動向']>0?'text-red-400':'text-green-400'}} font-mono">${{item['投信動向']}} 張</span>
                                 </div>
                                 <div class="text-xs text-gray-500 pt-2 border-t border-slate-700">
-                                    💡 ${{item['詳細理由']}}
+                                    💡 <span class="editable-text">${{item['詳細理由']}}</span>
                                 </div>
                             </div>
                         </div>
@@ -372,7 +406,7 @@ def generate_index_html(data):
                                                     ${{r.role_conclusion=='bullish'?'看多':'看空'}}
                                                 </span>
                                             </div>
-                                            <div class="text-xs text-gray-400 mt-1 pl-1 border-l-2 border-gray-600">
+                                            <div class="text-xs text-gray-400 mt-1 pl-1 border-l-2 border-gray-600 editable-text">
                                                 ${{r.role_name === '籌碼分析官' ? chipEvidence : (r.key_evidence && r.key_evidence.length > 0 ? r.key_evidence[0] : '無顯著訊號')}}
                                             </div>
                                         </div>
@@ -383,7 +417,7 @@ def generate_index_html(data):
                             ${{item.ai_insight ? `
                                 <div class="mt-4 p-3 bg-indigo-900/30 border border-indigo-500/30 rounded-lg">
                                     <p class="text-xs text-indigo-300 font-bold mb-1">🔮 基金經理人預測</p>
-                                    <p class="text-xs text-gray-300 leading-relaxed">${{item.ai_insight}}</p>
+                                    <p class="text-xs text-gray-300 leading-relaxed editable-text">${{item.ai_insight}}</p>
                                 </div>
                             ` : ''}}
                         </div>
