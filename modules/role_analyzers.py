@@ -289,6 +289,92 @@ class ContextAnalyzer:
         )
 
 
+class RiskAnalyzer:
+    """
+    ⚠️ 風險評估官
+    
+    關注：波動性、資金配置、停損停利、風險報酬比
+    禁止：不預測方向、不給進場點位建議
+    """
+    
+    ROLE_NAME = "風險評估官"
+    
+    def analyze(self, 
+                volatility: float = 0.0,  # 近期波動率 (%)
+                current_drawdown: float = 0.0,  # 目前回檔幅度 (%)
+                rsi: float = 50.0,
+                score: float = 5.0,  # 喵姆評分
+                foreign_net: int = 0) -> RoleOutput:
+        """
+        評估投資風險
+        
+        Args:
+            volatility: 近期日均波動率 (%)
+            current_drawdown: 從近期高點回檔幅度 (%)
+            rsi: RSI 指標值
+            score: 喵姆綜合評分
+            foreign_net: 外資淨買賣 (張)
+        """
+        
+        risk_level = 0  # 風險等級 0-100
+        evidence = []
+        
+        # 波動性風險
+        if volatility > 5:
+            risk_level += 30
+            evidence.append("⚡ 高波動風險 (日波動 >5%)")
+        elif volatility > 3:
+            risk_level += 15
+            evidence.append("📊 中等波動")
+        else:
+            evidence.append("🧘 低波動穩定")
+        
+        # 回檔風險
+        if current_drawdown > 20:
+            risk_level += 25
+            evidence.append(f"📉 深度回檔 ({abs(current_drawdown):.1f}%)")
+        elif current_drawdown > 10:
+            risk_level += 15
+            evidence.append(f"⚠️ 明顯回檔 ({abs(current_drawdown):.1f}%)")
+        
+        # RSI 極端值風險
+        if rsi > 80:
+            risk_level += 20
+            evidence.append("🔥 RSI 過熱，追高風險大")
+        elif rsi < 20:
+            risk_level += 10
+            evidence.append("❄️ RSI 超賣，可能反彈但勿重壓")
+        
+        # 外資動向與評分背離
+        if (foreign_net < -5000 and score > 6) or (foreign_net > 5000 and score < 4):
+            risk_level += 15
+            evidence.append("⚔️ 籌碼與評分背離，訊號矛盾")
+        
+        # 決定風險結論
+        if risk_level >= 50:
+            conclusion = Direction.BEARISH  # 高風險=偏空（謹慎）
+            confidence = min(90, 50 + risk_level // 2)
+        elif risk_level >= 25:
+            conclusion = Direction.NEUTRAL
+            confidence = 50
+        else:
+            conclusion = Direction.BULLISH  # 低風險=可操作
+            confidence = min(80, 70 - risk_level)
+        
+        return RoleOutput(
+            role_name=self.ROLE_NAME,
+            role_conclusion=conclusion,
+            confidence=confidence,
+            key_evidence=evidence,
+            raw_data={
+                "risk_level": risk_level,
+                "volatility": volatility,
+                "current_drawdown": current_drawdown
+            }
+        )
+
+
+
 # ============================================================
 # 4. 衝突解決器 (v13 with intensity)
 # ============================================================
@@ -460,7 +546,7 @@ class MultiRoleAnalyzer:
     多角色分析協調器 (v13)
     
     完整流程：
-    1. 各角色獨立分析
+    1. 各角色獨立分析 (4個 AI 角色)
     2. 衝突偵測與整合
     3. 雙層語言摘要
     4. 輸出符合 v13 Spec 的完整結構
@@ -470,6 +556,7 @@ class MultiRoleAnalyzer:
         self.chip_analyzer = ChipAnalyzer()
         self.tech_analyzer = TechAnalyzer()
         self.context_analyzer = ContextAnalyzer()
+        self.risk_analyzer = RiskAnalyzer()  # 新增第四個角色
         self.conflict_resolver = ConflictResolver()
         self.summary_generator = SummaryGenerator()
     
@@ -492,10 +579,14 @@ class MultiRoleAnalyzer:
                 sector_trend: str = "flat",
                 market_sentiment: str = "neutral",
                 has_catalyst: bool = False,
+                # 風險數據
+                volatility: float = 2.0,
+                current_drawdown: float = 0.0,
+                score: float = 5.0,
                 # 系統參數
                 market_state: str = "normal") -> dict:
         """
-        執行完整多角色分析
+        執行完整多角色分析 (4個 AI 角色)
         
         Returns:
             符合 v13 Spec 的完整輸出結構
@@ -514,7 +605,16 @@ class MultiRoleAnalyzer:
             has_positive_news, has_negative_news, sector_trend, market_sentiment, has_catalyst
         )
         
-        all_roles = [chip_result, tech_result, context_result]
+        # 第四個角色：風險評估官
+        risk_result = self.risk_analyzer.analyze(
+            volatility=volatility,
+            current_drawdown=current_drawdown,
+            rsi=rsi,
+            score=score,
+            foreign_net=foreign_net_volume
+        )
+        
+        all_roles = [chip_result, tech_result, context_result, risk_result]
         
         # 2. 衝突偵測與整合
         conflict_report = self.conflict_resolver.resolve(all_roles, market_state)
@@ -535,3 +635,4 @@ class MultiRoleAnalyzer:
             "role_outputs": [r.to_dict() for r in all_roles],
             "conflict_resolution": conflict_report.to_dict()
         }
+

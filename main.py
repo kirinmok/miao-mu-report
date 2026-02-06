@@ -742,7 +742,7 @@ def generate_index_html(data):
                                     ${{item.role_analysis.role_outputs.map(role => `
                                     <div class="p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
                                         <div class="flex justify-between items-center mb-1">
-                                            <span class="text-sm font-medium text-white">${{role.role_name === '籌碼分析官' ? '📊' : role.role_name === '技術分析官' ? '📉' : '🌐'}} ${{role.role_name}}</span>
+                                            <span class="text-sm font-medium text-white">${{role.role_name === '籌碼分析官' ? '📊' : role.role_name === '技術分析官' ? '📉' : role.role_name === '風險評估官' ? '⚠️' : '🌐'}} ${{role.role_name}}</span>
                                             <span class="text-xs px-2 py-1 rounded-full ${{role.role_conclusion === 'bullish' ? 'bg-green-900/50 text-green-400' : role.role_conclusion === 'bearish' ? 'bg-red-900/50 text-red-400' : 'bg-gray-700/50 text-gray-400'}}">
                                                 ${{role.role_conclusion === 'bullish' ? '看多' : role.role_conclusion === 'bearish' ? '看空' : '中立'}} (${{role.confidence}}%)
                                             </span>
