@@ -299,7 +299,14 @@ def generate_index_html(data):
             .action-bullish {{ background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: 2px solid #fbbf24; }}
             
             /* WYSIWYG 編輯模式樣式 */
-            .editable-active {{ border: 1px dashed #fbbf24; background: rgba(251, 191, 36, 0.1); cursor: text; }}
+            .editable-active { border: 1px dashed #fbbf24; background: rgba(251, 191, 36, 0.1); cursor: text; }
+            
+            /* Sidebar */
+            .sidebar { position: fixed; right: 0; top: 0; width: 320px; height: 100vh; background: rgba(15, 23, 42, 0.98); border-left: 1px solid rgba(255,255,255,0.1); transform: translateX(100%); transition: transform 0.3s ease; z-index: 1000; overflow-y: auto; padding: 1.5rem; }
+            .sidebar.open { transform: translateX(0); }
+            .watchlist-input { width: 100%; padding: 12px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; margin-bottom: 10px; }
+            .watchlist-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
+            .sidebar-toggle { position: fixed; right: 20px; top: 20px; z-index: 1001; background: linear-gradient(135deg, #38bdf8, #a855f7); border: none; border-radius: 12px; padding: 12px 20px; color: white; font-weight: 600; cursor: pointer; }
         </style>
     </head>
     <body class="p-4 md:p-8">
@@ -319,6 +326,23 @@ def generate_index_html(data):
         <a href="http://localhost:5000/admin" target="_blank" class="fixed bottom-6 left-6 bg-slate-700 hover:bg-slate-600 text-white p-4 rounded-full shadow-lg transition-all z-50 flex items-center gap-2 border border-slate-500">
             ⚙️ <span>管理後台</span>
         </a>
+
+        <!-- Sidebar Toggle -->
+        <button class="sidebar-toggle" onclick="toggleSidebar()">📋 追蹤清單</button>
+
+        <!-- Sidebar Content -->
+        <div id="sidebar" class="sidebar">
+            <h2 class="text-xl font-bold text-white mb-4">📋 追蹤清單管理</h2>
+            <div class="mb-6">
+                <input type="text" id="tickerInput" class="watchlist-input" placeholder="輸入股票代號 (如 2330)">
+                <input type="text" id="nameInput" class="watchlist-input" placeholder="輸入股票名稱 (如 台積電)">
+                <button id="addBtn" class="watchlist-btn" onclick="addStock()">➕ 新增並分析</button>
+            </div>
+            <div class="text-sm text-gray-400 mb-2">目前清單</div>
+            <div id="watchlistContainer"></div>
+            <button class="watchlist-btn" style="background: #f59e0b; margin-top:20px" onclick="triggerAnalysis()">🚀 立即重新分析</button>
+            <button class="sidebar-toggle" style="right:auto; top:auto; position:relative; margin-top:10px; width:100%; background:#64748b" onclick="toggleSidebar()">✖️ 關閉</button>
+        </div>
 
         <script>
             const data = {json_data};
@@ -345,8 +369,6 @@ def generate_index_html(data):
                     editables.forEach(el => {{
                         el.contentEditable = 'false';
                         el.classList.remove('editable-active');
-                    }});
-                    alert('你可以直接列印或截圖保存修改後的報告！');
                 }}
             }}
             
@@ -359,6 +381,93 @@ def generate_index_html(data):
                 document.getElementById(`content-${{tab}}-${{idx}}`).classList.remove('hidden');
                 document.getElementById(`tab-${{tab}}-${{idx}}`).classList.add('active');
             }}
+
+            // --- Sidebar Logic ---
+            function toggleSidebar() {{
+                document.getElementById('sidebar').classList.toggle('open');
+                renderWatchlist();
+            }}
+
+            function renderWatchlist() {{
+                const container = document.getElementById('watchlistContainer');
+                container.innerHTML = '';
+                // Use data as source of truth for display
+                data.forEach(item => {{
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-slate-800 p-3 rounded mb-2 border border-slate-700';
+                    div.innerHTML = `<span class="text-white font-mono">${{item['代號']}} ${{item['名稱']}}</span><button onclick="removeStock('${{item['代號']}}')" class="text-red-400 hover:text-red-300">❌</button>`;
+                    container.appendChild(div);
+                }});
+            }}
+
+            async function addStock() {{
+                const ticker = document.getElementById('tickerInput').value.trim();
+                const name = document.getElementById('nameInput').value.trim();
+                if (!ticker) return alert('請輸入代號');
+                
+                const btn = document.getElementById('addBtn');
+                btn.innerHTML = '⏳ 處理中...';
+                
+                try {{
+                    const res = await fetch('/api/admin/watchlist/add', {{
+                        method: 'POST',
+                        headers: {{'Content-Type': 'application/json'}},
+                        body: JSON.stringify({{ ticker, name }})
+                    }});
+                    const resData = await res.json();
+                    
+                    if (res.ok) {{
+                        alert(`✅ 已新增 ${{ticker}}！\\n系統將自動開始分析，請稍候...`);
+                        await triggerAnalysis(); // Auto trigger analysis
+                    }} else {{
+                        if (resData.need_login) {{
+                            alert('⚠️ 請先登入後台 (點擊左下角齒輪)');
+                            window.open('/admin', '_blank');
+                        }} else {{
+                            alert('❌ ' + resData.error);
+                        }}
+                    }}
+                }} catch(e) {{
+                    alert('❌ 連線失敗 (請確認伺服器已啟動)');
+                }}
+                btn.innerHTML = '➕ 新增並分析';
+            }}
+
+            async function removeStock(ticker) {{
+                if(!confirm(`確定移除 ${{ticker}}?`)) return;
+                
+                try {{
+                    const res = await fetch('/api/admin/watchlist/remove', {{
+                        method: 'POST',
+                        headers: {{'Content-Type': 'application/json'}},
+                        body: JSON.stringify({{ ticker }})
+                    }});
+                    if (res.ok) {{
+                        // Optimistic update
+                        alert('✅ 已移除，請重新分析以更新報表');
+                    }} else {{
+                         alert('❌ 移除失敗 (請確認已登入)');
+                    }}
+                }} catch(e) {{ console.error(e); }}
+            }}
+
+            async function triggerAnalysis() {{
+                if(!confirm('確定要根據目前清單重新跑一次分析嗎？(約需 1-2 分鐘)')) return;
+                alert('🚀 分析指令已發送！\\n請耐心等待，視窗會自動重新整理。');
+                
+                try {{
+                    const res = await fetch('/api/admin/run-analysis', {{ method: 'POST' }});
+                    if (res.ok) {{
+                        alert('✅ 分析完成！即將重整頁面');
+                        location.reload();
+                    }} else {{
+                        alert('❌ 分析失敗');
+                    }}
+                }} catch(e) {{
+                    alert('❌ 伺服器無回應');
+                }}
+            }}
+            // ---------------------
 
             data.forEach((item, idx) => {{
                 // 籌碼證據字串 (給 AI 用)
