@@ -362,12 +362,12 @@ def generate_index_html(data):
         <h1 class="text-3xl font-bold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
             🐱 喵姆 AI 戰情室 v11.0
         </h1>
-        <p class="text-center text-gray-400 mb-8">決策型旗艦版 • {{date_str}}</p>
+        <p class="text-center text-gray-400 mb-8">決策型旗艦版 • {date_str}</p>
         
         <div id="container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto"></div>
 
         <script>
-            const data = {{json_data}};
+            const data = {json_data};
             const container = document.getElementById('container');
             
             data.forEach((item, idx) => {{
