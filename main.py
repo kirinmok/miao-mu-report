@@ -303,9 +303,18 @@ def generate_index_html(data):
         </style>
     </head>
     <body class="p-4 md:p-8">
-        <header class="text-center mb-10">
+        <header class="text-center mb-10 relative">
             <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400">🐱 喵姆 AI 戰情室 v13.0</h1>
             <p class="text-gray-400 text-sm mt-2">決策強化版 • 證據導向 • {{date_str}}</p>
+            
+            <!-- 頂部按鈕群 -->
+            <div class="mt-4 flex justify-center gap-3">
+               <span class="px-4 py-2 rounded-full bg-cyan-900/30 text-cyan-400 text-sm border border-cyan-800/50">🎯 喵姆評分</span>
+               <span class="px-4 py-2 rounded-full bg-purple-900/30 text-purple-400 text-sm border border-purple-800/50">🤖 Perplexity AI</span>
+               <a href="http://localhost:5000/admin" target="_blank" class="px-4 py-2 rounded-full bg-slate-700 text-slate-300 text-sm border border-slate-600 hover:bg-slate-600 transition no-underline">
+                 📋 追蹤清單 (後台)
+               </a>
+            </div>
         </header>
         
         <div id="container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 max-w-7xl mx-auto"></div>
