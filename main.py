@@ -594,8 +594,8 @@ def generate_index_html(data):
                    <span class="px-4 py-2 rounded-full bg-purple-900/30 text-purple-400 text-sm border border-purple-800/50 backdrop-blur pulse-ring">
                      🤖 Perplexity AI 加持
                    </span>
-                   <button onclick="toggleSidebar()" class="px-4 py-2 rounded-full bg-emerald-900/30 text-emerald-400 text-sm border border-emerald-800/50 backdrop-blur hover:bg-emerald-800/50 transition cursor-pointer">
-                     📋 追蹤清單
+                   <button onclick="promptAdminLogin()" class="px-4 py-2 rounded-full bg-emerald-900/30 text-emerald-400 text-sm border border-emerald-800/50 backdrop-blur hover:bg-emerald-800/50 transition cursor-pointer" id="admin-btn">
+                     🔐 管理後台
                    </button>
                 </div>
             </header>
@@ -828,6 +828,29 @@ def generate_index_html(data):
             }}
             
             renderCards();
+            
+            // ========== 管理後台密碼驗證 ==========
+            let isAdminLoggedIn = false;
+            const ADMIN_PASSWORD = 'Aimyon';  // 密碼直接寫在這裡（你可以改）
+            
+            function promptAdminLogin() {{
+                if (isAdminLoggedIn) {{
+                    toggleSidebar();
+                    return;
+                }}
+                
+                const password = prompt('🔐 請輸入管理員密碼：');
+                if (password === null) return;  // 取消
+                
+                if (password === ADMIN_PASSWORD) {{
+                    isAdminLoggedIn = true;
+                    document.getElementById('admin-btn').innerHTML = '📋 追蹤清單';
+                    toggleSidebar();
+                    alert('✅ 登入成功！');
+                }} else {{
+                    alert('❌ 密碼錯誤');
+                }}
+            }}
             
             // ========== 互動式追蹤清單功能 ==========
             let watchlist = [];

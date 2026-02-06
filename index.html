@@ -211,8 +211,8 @@
                    <span class="px-4 py-2 rounded-full bg-purple-900/30 text-purple-400 text-sm border border-purple-800/50 backdrop-blur pulse-ring">
                      🤖 Perplexity AI 加持
                    </span>
-                   <button onclick="toggleSidebar()" class="px-4 py-2 rounded-full bg-emerald-900/30 text-emerald-400 text-sm border border-emerald-800/50 backdrop-blur hover:bg-emerald-800/50 transition cursor-pointer">
-                     📋 追蹤清單
+                   <button onclick="promptAdminLogin()" class="px-4 py-2 rounded-full bg-emerald-900/30 text-emerald-400 text-sm border border-emerald-800/50 backdrop-blur hover:bg-emerald-800/50 transition cursor-pointer" id="admin-btn">
+                     🔐 管理後台
                    </button>
                 </div>
             </header>
@@ -265,7 +265,7 @@
         </div>
 
         <script>
-            const stockData = [{"代號": "2330", "名稱": "台積電", "收盤價": 1050.0, "評分": 8.5, "建議": "🚀 強力買進", "建議類別": "action-buy", "外資動向": "連續買進 (近5日買超 15000張)", "詳細理由": "💰外資大買 📈站上季線 🐂MACD金叉", "chart_data": {"chips": 80, "tech_ma": 80, "tech_macd": 80, "tech_rsi": 65, "score": 85}, "role_analysis": {"final_direction": "bullish", "confidence": 68, "summary_human": "各項指標都偏正面，屬於相對安全的機會。", "summary_professional": "籌碼、技術、情境三維度均偏多，風險報酬比相對有利。", "integration_reason": "無衝突，採共識方向。", "conflict_intensity": 0.0, "role_outputs": [{"role_name": "籌碼分析官", "role_conclusion": "neutral", "confidence": 50, "key_evidence": ["外資動向不明確 (淨量 15,000 張)", "三大法人同步買超"], "raw_data": {"foreign_net": 15000, "positive_days": 3, "trust_net": 0, "dealer_net": 0}}, {"role_name": "技術分析官", "role_conclusion": "bullish", "confidence": 75, "key_evidence": ["股價站上季線 ✓", "MACD 多頭排列"], "raw_data": {"close": 1050, "ma60": 980, "ma20": 1020, "rsi": 65, "macd_diff": 5, "price_change_5d": 3.5, "tech_score": 2.5}}, {"role_name": "情境分析官", "role_conclusion": "bullish", "confidence": 60, "key_evidence": ["基本面有利多消息", "產業處於上升趨勢", "大盤情緒偏多"], "raw_data": {"has_positive_news": true, "has_negative_news": false, "sector_trend": "up", "market_sentiment": "bullish", "has_catalyst": false, "context_score": 2.0}}, {"role_name": "風險評估官", "role_conclusion": "bullish", "confidence": 70, "key_evidence": ["🧘 低波動穩定"], "raw_data": {"risk_level": 0, "volatility": 2.0, "current_drawdown": 5.0}}], "conflict_resolution": {"has_conflict": false, "conflict_intensity": 0.0, "conflict_roles": [], "conflict_summary": "各角色判斷一致", "integration_reason": "無衝突，採共識方向。", "final_direction": "bullish", "final_confidence": 68}}}, {"代號": "2317", "名稱": "鴻海", "收盤價": 180.0, "評分": 5.0, "建議": "⏸️ 觀望持有", "建議類別": "action-hold", "外資動向": "調節持股 (小幅買超)", "詳細理由": "外資小買 📉跌破季線 🐻MACD死叉", "chart_data": {"chips": 55, "tech_ma": 30, "tech_macd": 20, "tech_rsi": 35, "score": 50}, "role_analysis": {"final_direction": "bearish", "confidence": 45, "summary_human": "各項指標都偏負面，現在進場風險較高。", "summary_professional": "籌碼、技術、情境三維度均偏空，短期內宜保守操作。", "integration_reason": "無衝突，採共識方向。", "conflict_intensity": 0.0, "role_outputs": [{"role_name": "籌碼分析官", "role_conclusion": "neutral", "confidence": 50, "key_evidence": ["外資動向不明確 (淨量 8,000 張)", "三大法人同步買超"], "raw_data": {"foreign_net": 8000, "positive_days": 2, "trust_net": 0, "dealer_net": 0}}, {"role_name": "技術分析官", "role_conclusion": "bearish", "confidence": 75, "key_evidence": ["股價跌破季線 ✗", "股價跌破月線", "MACD 死叉"], "raw_data": {"close": 180, "ma60": 190, "ma20": 185, "rsi": 35, "macd_diff": -2, "price_change_5d": -5.0, "tech_score": -2.5}}, {"role_name": "情境分析官", "role_conclusion": "bearish", "confidence": 60, "key_evidence": ["基本面有利空消息", "產業處於下行循環", "大盤情緒偏空"], "raw_data": {"has_positive_news": false, "has_negative_news": true, "sector_trend": "down", "market_sentiment": "bearish", "has_catalyst": false, "context_score": -2.0}}, {"role_name": "風險評估官", "role_conclusion": "neutral", "confidence": 50, "key_evidence": ["📊 中等波動", "⚠️ 明顯回檔 (15.0%)"], "raw_data": {"risk_level": 30, "volatility": 4.5, "current_drawdown": 15.0}}], "conflict_resolution": {"has_conflict": false, "conflict_intensity": 0.0, "conflict_roles": [], "conflict_summary": "各角色判斷一致", "integration_reason": "無衝突，採共識方向。", "final_direction": "bearish", "final_confidence": 45}}}, {"代號": "2603", "名稱": "長榮", "收盤價": 220.0, "評分": 2.0, "建議": "⚠️ 建議賣出", "建議類別": "action-sell", "外資動向": "連續倒貨 (近5日賣超 50000張)", "詳細理由": "💸外資提款 📉跌破季線 🐻MACD死叉", "chart_data": {"chips": 10, "tech_ma": 15, "tech_macd": 10, "tech_rsi": 25, "score": 20}, "role_analysis": {"final_direction": "bearish", "confidence": 100, "summary_human": "各項指標都偏負面，現在進場風險較高。", "summary_professional": "籌碼、技術、情境三維度均偏空，短期內宜保守操作。", "integration_reason": "無衝突，採共識方向。", "conflict_intensity": 0.0, "role_outputs": [{"role_name": "籌碼分析官", "role_conclusion": "bearish", "confidence": 80, "key_evidence": ["外資連續倒貨，合計賣超 50,000 張"], "raw_data": {"foreign_net": -50000, "positive_days": 0, "trust_net": 0, "dealer_net": 0}}, {"role_name": "技術分析官", "role_conclusion": "bearish", "confidence": 80, "key_evidence": ["股價跌破季線 ✗", "股價跌破月線", "MACD 死叉", "RSI(25) 超賣區", "近5日跌幅 -12.0%"], "raw_data": {"close": 220, "ma60": 250, "ma20": 240, "rsi": 25, "macd_diff": -8, "price_change_5d": -12.0, "tech_score": -3.0}}, {"role_name": "情境分析官", "role_conclusion": "bearish", "confidence": 60, "key_evidence": ["基本面有利空消息", "產業處於下行循環", "大盤情緒偏空"], "raw_data": {"has_positive_news": false, "has_negative_news": true, "sector_trend": "down", "market_sentiment": "bearish", "has_catalyst": false, "context_score": -2.0}}, {"role_name": "風險評估官", "role_conclusion": "bearish", "confidence": 77, "key_evidence": ["⚡ 高波動風險 (日波動 >5%)", "📉 深度回檔 (25.0%)"], "raw_data": {"risk_level": 55, "volatility": 6.0, "current_drawdown": 25.0}}], "conflict_resolution": {"has_conflict": false, "conflict_intensity": 0.0, "conflict_roles": [], "conflict_summary": "各角色判斷一致", "integration_reason": "無衝突，採共識方向。", "final_direction": "bearish", "final_confidence": 100}}}];
+            const stockData = [{"代號": "2330", "名稱": "台積電", "收盤價": 1050.0, "評分": 8.5, "建議": "🚀 強力買進", "建議類別": "action-buy", "外資動向": "連續買進", "詳細理由": "外資買", "chart_data": {"chips": 80, "tech_ma": 80, "tech_macd": 80, "tech_rsi": 65, "score": 85}}, {"代號": "00881", "名稱": "國泰科技5G", "收盤價": 22.5, "評分": 6.0, "建議": "⏸️ 觀望持有", "建議類別": "action-hold", "外資動向": "持平", "詳細理由": "穩定", "chart_data": {"chips": 50, "tech_ma": 50, "tech_macd": 50, "tech_rsi": 50, "score": 60}}];
             
             function getScoreClass(score) {
                 if (score >= 8) return 'score-h';
@@ -445,6 +445,29 @@
             }
             
             renderCards();
+            
+            // ========== 管理後台密碼驗證 ==========
+            let isAdminLoggedIn = false;
+            const ADMIN_PASSWORD = 'Aimyon';  // 密碼直接寫在這裡（你可以改）
+            
+            function promptAdminLogin() {
+                if (isAdminLoggedIn) {
+                    toggleSidebar();
+                    return;
+                }
+                
+                const password = prompt('🔐 請輸入管理員密碼：');
+                if (password === null) return;  // 取消
+                
+                if (password === ADMIN_PASSWORD) {
+                    isAdminLoggedIn = true;
+                    document.getElementById('admin-btn').innerHTML = '📋 追蹤清單';
+                    toggleSidebar();
+                    alert('✅ 登入成功！');
+                } else {
+                    alert('❌ 密碼錯誤');
+                }
+            }
             
             // ========== 互動式追蹤清單功能 ==========
             let watchlist = [];
