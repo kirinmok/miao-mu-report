@@ -315,6 +315,11 @@ def generate_index_html(data):
             ✏️ <span>進入編輯模式</span>
         </button>
 
+        <!-- 管理後台按鈕 -->
+        <a href="http://localhost:5000/admin" target="_blank" class="fixed bottom-6 left-6 bg-slate-700 hover:bg-slate-600 text-white p-4 rounded-full shadow-lg transition-all z-50 flex items-center gap-2 border border-slate-500">
+            ⚙️ <span>管理後台</span>
+        </a>
+
         <script>
             const data = {json_data};
             const container = document.getElementById('container');
