@@ -6,6 +6,7 @@ import json
 from datetime import datetime, timedelta
 from FinMind.data import DataLoader
 from dotenv import load_dotenv
+from modules.role_analyzers import MultiRoleAnalyzer
 
 # ==========================================
 # 喵姆 AI 股市偵測站 v10.0 (Perplexity 整合版)
@@ -103,25 +104,32 @@ class ProAnalyzer:
             )
             
             foreign_msg = "外資中立"
+            foreign_display = "調節持股 (小幅買超)"  # 新增：用於 HTML 顯示的更詳細描述
             foreign_score = 0
             net_buy = 0
             
             if not df_chips.empty:
                 df_foreign = df_chips[df_chips['name'] == 'Foreign_Investor']
                 if not df_foreign.empty:
-                    last_3_days = df_foreign.tail(3)
-                    net_buy = (last_3_days['buy'].sum() - last_3_days['sell'].sum()) // 1000
+                    last_5_days = df_foreign.tail(5)  # 改用近5日
+                    net_buy = (last_5_days['buy'].sum() - last_5_days['sell'].sum()) // 1000
+                    
+                    # 新版描述格式：更清楚表達趨勢
                     if net_buy > 1000: 
                         foreign_msg = "💰外資大買"
+                        foreign_display = f"連續買進 (近5日買超 {abs(int(net_buy))}張)"
                         foreign_score = 2.5 
                     elif net_buy < -1000:
                         foreign_msg = "💸外資提款"
+                        foreign_display = f"連續倒貨 (近5日賣超 {abs(int(net_buy))}張)"
                         foreign_score = -2.5
                     elif net_buy > 0:
                         foreign_msg = "外資小買"
+                        foreign_display = f"調節持股 (小幅買超)"
                         foreign_score = 0.5
                     else:
                         foreign_msg = "外資小賣"
+                        foreign_display = f"調節持股 (小幅賣超)"
                         foreign_score = -0.5
 
             # 綜合評分
@@ -166,10 +174,38 @@ class ProAnalyzer:
                 rec = "⏸️ 觀望持有"
                 rec_class = "action-hold"
             
+            # ========== 多角色 AI 分析 (v13) ==========
+            try:
+                multi_role = MultiRoleAnalyzer()
+                # 計算近5日價格變化
+                price_5d_ago = df['close'].iloc[-5] if len(df) >= 5 else close_price
+                price_change_5d = ((close_price - price_5d_ago) / price_5d_ago) * 100
+                
+                role_analysis = multi_role.analyze(
+                    # 籌碼數據
+                    foreign_net_volume=int(net_buy * 1000),  # 轉回張數
+                    positive_days=3 if net_buy > 0 else 0,
+                    # 技術數據
+                    close=close_price,
+                    ma60=ma60,
+                    ma20=latest['SMA_60'] if not pd.isna(latest['SMA_60']) else close_price,  # 用60MA代替
+                    rsi=rsi,
+                    macd_diff=macd - signal,
+                    price_change_5d=price_change_5d,
+                    # 情境數據 (簡化處理)
+                    has_positive_news=score >= 8,
+                    has_negative_news=score <= 3,
+                    sector_trend="up" if close_price > ma60 else "down",
+                    market_sentiment="bullish" if score >= 6 else ("bearish" if score <= 4 else "neutral")
+                )
+            except Exception as role_err:
+                print(f"⚠️ 多角色分析錯誤: {role_err}")
+                role_analysis = None
+            
             return {
                 '代號': stock_id, '名稱': stock_name, '收盤價': close_price,
                 '評分': round(score, 1), '建議': rec, '建議類別': rec_class,
-                '外資動向': f"{int(net_buy)}張", '詳細理由': " ".join(reasons),
+                '外資動向': foreign_display, '詳細理由': " ".join(reasons),
                 '分析日期': end_date,
                 'reasons_raw': reasons, # 保留原始 list 供 AI 參考
                 'chart_data': {
@@ -178,7 +214,8 @@ class ProAnalyzer:
                     'tech_macd': 80 if macd > signal else 20,
                     'tech_rsi': rsi,
                     'score': score * 10
-                }
+                },
+                'role_analysis': role_analysis  # 多角色分析結果
             }
         except Exception as e:
             import traceback
@@ -214,26 +251,24 @@ def main():
         masked_key = PERPLEXITY_API_KEY[:4] + "***" + PERPLEXITY_API_KEY[-4:] if len(PERPLEXITY_API_KEY) > 8 else "***"
         print(f"✅ 成功讀取 API Key (長度: {len(PERPLEXITY_API_KEY)}): {masked_key}")
 
-    # 載入追蹤清單
-    watchlist_path = os.path.join(os.path.dirname(__file__), "watchlist.json")
-    if os.path.exists(watchlist_path):
-        try:
-            with open(watchlist_path, "r", encoding="utf-8") as f:
-                watchlist_data = json.load(f)
+    # Read from watchlist.json if exists, otherwise use hardcoded list
+    try:
+        with open("watchlist.json", "r", encoding="utf-8") as f:
+            watchlist_data = json.load(f)
             my_portfolio = [(s["ticker"], s["name"]) for s in watchlist_data.get("stocks", [])]
             print(f"📋 已載入追蹤清單：{len(my_portfolio)} 檔股票")
-        except Exception as e:
-            print(f"⚠️ 讀取 watchlist.json 失敗: {e}，使用預設清單")
-            my_portfolio = [
-                ("2330", "台積電"), ("2317", "鴻海"), ("0050", "元大台灣50"),
-                ("0056", "元大高股息"), ("00919", "群益高股息")
-            ]
-    else:
-        print("⚠️ 找不到 watchlist.json，使用預設清單")
+    except FileNotFoundError:
         my_portfolio = [
             ("2330", "台積電"), ("2317", "鴻海"), ("0050", "元大台灣50"),
-            ("0056", "元大高股息"), ("00919", "群益高股息")
+            ("0056", "元大高股息"), ("00919", "群益高股息"),
+            ("1303", "南亞"), ("2603", "長榮"), ("2615", "萬海"),
+            ("1609", "大亞"), ("3090", "日電貿"), ("6715", "嘉基"), ("1519", "華城"),
+            ("3293", "鈊象"), ("5381", "合正"), ("8011", "台通"), ("4763", "材料-KY"),
+            ("3265", "台星科"), ("2376", "技嘉"), ("2379", "瑞昱"), ("3034", "聯詠"),
+            ("7749", "意騰-KY"), ("3035", "智原"), ("6197", "佳必琪"), ("3680", "家登"),
+            ("3088", "艾訊"), ("6579", "研揚")
         ]
+        print(f"⚠️ 使用預設追蹤清單：{len(my_portfolio)} 檔股票")
     
     excel_data = []
     line_msg = f"🐱 【喵姆 AI 股市偵測站】\n📅 {datetime.now().strftime('%Y-%m-%d')}\n基於多維度指標與 AI 調研的自動化決策系統\n"
@@ -486,120 +521,82 @@ def generate_index_html(data):
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
             }}
-            /* 側邊欄樣式 */
+            /* 互動式追蹤清單側邊欄 */
             .sidebar {{
                 position: fixed;
                 right: 0;
                 top: 0;
-                width: 320px;
-                height: 100vh;
-                background: rgba(15, 23, 42, 0.98);
-                border-left: 1px solid rgba(255,255,255,0.1);
+                width: 360px;
+                height: 100%;
+                background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
                 transform: translateX(100%);
                 transition: transform 0.3s ease;
-                z-index: 1000;
-                overflow-y: auto;
-                padding: 1.5rem;
+                z-index: 100;
+                border-left: 1px solid rgba(56, 189, 248, 0.2);
+                box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
             }}
             .sidebar.open {{
                 transform: translateX(0);
             }}
-            .sidebar-toggle {{
+            .sidebar-overlay {{
                 position: fixed;
-                right: 20px;
-                top: 20px;
-                z-index: 1001;
-                background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-                border: none;
-                border-radius: 12px;
-                padding: 12px 20px;
-                color: white;
-                font-weight: 600;
-                cursor: pointer;
-                box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
-            }}
-            .watchlist-input {{
+                top: 0;
+                left: 0;
                 width: 100%;
-                padding: 12px;
-                background: rgba(30, 41, 59, 0.8);
-                border: 1px solid rgba(255,255,255,0.2);
-                border-radius: 8px;
-                color: white;
-                font-size: 14px;
-                margin-bottom: 10px;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                z-index: 99;
             }}
-            .watchlist-input:focus {{
-                outline: none;
-                border-color: var(--accent-cyan);
-            }}
-            .watchlist-btn {{
-                width: 100%;
-                padding: 12px;
-                background: linear-gradient(135deg, #10b981, #059669);
-                border: none;
-                border-radius: 8px;
-                color: white;
-                font-weight: 600;
-                cursor: pointer;
-                margin-bottom: 20px;
-            }}
-            .watchlist-btn:hover {{
-                opacity: 0.9;
+            .sidebar-overlay.open {{
+                opacity: 1;
+                visibility: visible;
             }}
             .watchlist-item {{
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 10px 12px;
-                background: rgba(30, 41, 59, 0.6);
-                border-radius: 8px;
+                padding: 12px 16px;
+                background: rgba(30, 41, 59, 0.8);
+                border-radius: 10px;
                 margin-bottom: 8px;
-                border: 1px solid rgba(255,255,255,0.1);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                transition: all 0.2s ease;
             }}
             .watchlist-item:hover {{
-                border-color: rgba(255,255,255,0.2);
+                background: rgba(56, 189, 248, 0.1);
+                border-color: rgba(56, 189, 248, 0.3);
             }}
-            .watchlist-delete {{
-                background: rgba(239, 68, 68, 0.2);
-                border: none;
-                color: #f87171;
-                padding: 6px 10px;
-                border-radius: 6px;
+            .watchlist-btn {{
                 cursor: pointer;
-                font-size: 12px;
-            }}
-            .watchlist-delete:hover {{
-                background: rgba(239, 68, 68, 0.4);
-            }}
-            .export-btn {{
-                width: 100%;
-                padding: 12px;
-                background: linear-gradient(135deg, #6366f1, #8b5cf6);
-                border: none;
+                padding: 8px 16px;
                 border-radius: 8px;
-                color: white;
-                font-weight: 600;
-                cursor: pointer;
-                margin-top: 20px;
+                font-weight: 500;
+                transition: all 0.2s ease;
             }}
         </style>
     </head>
     <body class="p-4 md:p-8">
         <div class="max-w-7xl mx-auto">
-            <header class="mb-12 flex flex-col md:flex-row items-center md:items-end gap-6">
+            <header class="mb-12 flex flex-col md:flex-row justify-between items-center">
                 <div class="text-center md:text-left">
                     <h1 class="text-4xl font-bold gradient-text mb-2">
                         🐱 喵姆 AI 股市偵測站
                     </h1>
                     <p class="text-gray-400">基於多維度指標與 AI 調研的自動化決策系統 • {date_str}</p>
                 </div>
-                <div class="mt-4 md:mt-0 flex gap-3 md:mb-1">
+                <div class="mt-4 md:mt-0 flex gap-3">
                    <span class="px-4 py-2 rounded-full bg-cyan-900/30 text-cyan-400 text-sm border border-cyan-800/50 backdrop-blur">
                      🎯 喵姆評分系統
                    </span>
                    <span class="px-4 py-2 rounded-full bg-purple-900/30 text-purple-400 text-sm border border-purple-800/50 backdrop-blur pulse-ring">
                      🤖 Perplexity AI 加持
                    </span>
+                   <button onclick="toggleSidebar()" class="px-4 py-2 rounded-full bg-emerald-900/30 text-emerald-400 text-sm border border-emerald-800/50 backdrop-blur hover:bg-emerald-800/50 transition cursor-pointer">
+                     📋 追蹤清單
+                   </button>
                 </div>
             </header>
             
@@ -610,36 +607,44 @@ def generate_index_html(data):
                 <p>Powered by Perplexity AI & FinMind | 本報告僅供參考，投資風險請自負 | 喵姆 AI 股市偵測站</p>
             </footer>
         </div>
-
-        <!-- 側邊欄切換按鈕 -->
-        <button class="sidebar-toggle" onclick="toggleSidebar()">
-            📋 追蹤清單
-        </button>
-
-        <!-- 側邊欄 -->
-        <div id="sidebar" class="sidebar">
-            <h2 class="text-xl font-bold text-white mb-4">📋 追蹤清單管理</h2>
+        
+        <!-- 互動式追蹤清單側邊欄 -->
+        <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <div id="sidebar" class="sidebar p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-white">📋 追蹤清單管理</h3>
+                <button onclick="toggleSidebar()" class="text-gray-400 hover:text-white text-2xl transition">&times;</button>
+            </div>
             
             <div class="mb-6">
-                <input type="text" id="tickerInput" class="watchlist-input" placeholder="輸入股票代號 (如 2330)">
-                <input type="text" id="nameInput" class="watchlist-input" placeholder="輸入股票名稱 (如 台積電)">
-                <button class="watchlist-btn" onclick="addStock()">➕ 新增追蹤</button>
-            </div>
-
-            <div class="text-sm text-gray-400 mb-2">目前追蹤 (<span id="stockCount">0</span> 檔)</div>
-            <div id="watchlistContainer"></div>
-
-            <button class="export-btn" onclick="exportWatchlist()">📥 匯出 watchlist.json</button>
-            
-            <div class="mt-4">
-                <label class="text-sm text-gray-400 block mb-2">📤 匯入設定檔</label>
-                <input type="file" id="importFile" accept=".json" onchange="importWatchlist(event)" 
-                       class="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white file:cursor-pointer">
+                <p class="text-sm text-gray-400 mb-3">新增股票到追蹤清單，下次分析時會自動納入</p>
+                <div class="flex gap-2">
+                    <input id="new-ticker" type="text" placeholder="股票代號 (如 2330)" 
+                           class="flex-1 px-4 py-3 bg-slate-800/80 border border-slate-600 rounded-xl text-white text-sm focus:border-cyan-500 focus:outline-none transition">
+                    <input id="new-name" type="text" placeholder="名稱 (如 台積電)" 
+                           class="flex-1 px-4 py-3 bg-slate-800/80 border border-slate-600 rounded-xl text-white text-sm focus:border-cyan-500 focus:outline-none transition">
+                </div>
+                <button onclick="addStock()" class="w-full mt-3 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 rounded-xl text-white font-medium transition shadow-lg">
+                    ＋ 加入追蹤
+                </button>
             </div>
             
-            <button class="sidebar-toggle" style="position:relative; right:auto; top:auto; margin-top:20px; width:100%;" onclick="toggleSidebar()">
-                ✖️ 關閉
-            </button>
+            <div class="border-t border-slate-700 pt-4">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm text-gray-400">目前追蹤中</span>
+                    <span id="watchlist-count" class="text-sm text-cyan-400 font-medium">0 檔</span>
+                </div>
+                <div id="watchlist-items" class="max-h-[50vh] overflow-y-auto space-y-2 pr-2">
+                    <!-- 動態生成 -->
+                </div>
+            </div>
+            
+            <div class="absolute bottom-6 left-6 right-6">
+                <button onclick="saveWatchlistToFile()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-medium transition">
+                    💾 儲存變更
+                </button>
+                <p class="text-xs text-gray-500 mt-2 text-center">儲存後重新執行 main.py 即可生效</p>
+            </div>
         </div>
 
         <script>
@@ -659,152 +664,155 @@ def generate_index_html(data):
             
             function renderCards() {{
                 const container = document.getElementById('cards-container');
-                container.innerHTML = '';
                 
-                // 1. 建立現有資料的 Map 方便查找
-                const stockMap = new Map();
-                stockData.forEach(item => stockMap.set(item['代號'], item));
-                
-                // 2. 根據 Watchlist 順序渲染
-                // 如果 Watchlist 為空（初次使用或未設定），則顯示所有 data
-                const renderList = watchlist.length > 0 ? watchlist : stockData.map(s => ({{ticker: s['代號'], name: s['名稱']}}));
-
-                renderList.forEach((wItem, index) => {{
-                    const item = stockMap.get(wItem.ticker);
+                stockData.forEach((item, index) => {{
+                    const baseScore = item['評分'];
+                    const miaoScore = item['miao_score'] || baseScore;
+                    const scoreClass = getScoreClass(miaoScore);
+                    const scoreColor = getScoreColor(miaoScore);
+                    const aiContent = item.ai_insight || '📊 評分未達觸發門檻，暫無深度分析';
                     
-                    if (item) {{
-                        // A. 有資料的卡片 (Existing Logic)
-                        const baseScore = item['評分'];
-                        const miaoScore = item['miao_score'] || baseScore;
-                        const scoreClass = getScoreClass(miaoScore);
-                        const scoreColor = getScoreColor(miaoScore);
-                        const aiContent = item.ai_insight || '📊 評分未達觸發門檻，暫無深度分析';
-                        const recClass = item['建議類別'] || 'action-hold';
-                        
-                        const card = document.createElement('div');
-                        card.className = 'glass-card rounded-2xl overflow-hidden';
-                        card.innerHTML = `
-                            <div class="p-6">
-                                <div class="mb-4 text-center">
-                                    <span class="action-badge ${{recClass}}">${{item['建議']}}</span>
+                    const card = document.createElement('div');
+                    card.className = 'glass-card rounded-2xl overflow-hidden';
+                    const recClass = item['建議類別'] || 'action-hold';
+                    card.innerHTML = `
+                        <div class="p-6">
+                            <!-- 行動建議大標籤 - 放在最上方 -->
+                            <div class="mb-4 text-center">
+                                <span class="action-badge ${{recClass}}">${{item['建議']}}</span>
+                            </div>
+                            
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h2 class="text-xl font-bold text-white">${{item['名稱']}} <span class="text-sm text-gray-500 font-normal">${{item['代號']}}</span></h2>
+                                    <div class="text-2xl font-mono mt-1 text-gray-200">$${{item['收盤價'].toFixed(2)}}</div>
                                 </div>
-                                
-                                <div class="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h2 class="text-xl font-bold text-white">${{item['名稱']}} <span class="text-sm text-gray-500 font-normal">${{item['代號']}}</span></h2>
-                                        <div class="text-2xl font-mono mt-1 text-gray-200">$${{item['收盤價'].toFixed(2)}}</div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-sm text-gray-400">喵姆評分</div>
-                                        <div class="text-2xl font-bold ${{scoreClass}}">${{miaoScore}}</div>
-                                    </div>
-                                </div>
-
-                                <div class="flex border-b border-gray-700/50 mb-4">
-                                    <button onclick="switchTab('${{wItem.ticker}}', 'data')" id="tab-data-${{wItem.ticker}}" class="tab-btn active px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200">📊 雷達分析</button>
-                                    <button onclick="switchTab('${{wItem.ticker}}', 'ai')" id="tab-ai-${{wItem.ticker}}" class="tab-btn px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200">🤖 AI 觀點</button>
-                                </div>
-
-                                <div id="view-data-${{wItem.ticker}}" class="view-content block">
-                                    <div class="chart-container h-52 mb-4">
-                                        <canvas id="chart-${{wItem.ticker}}"></canvas>
-                                        <div class="kirin-center">
-                                            <div class="kirin-value ${{scoreClass}}">${{miaoScore}}</div>
-                                            <div class="kirin-label">喵姆評分</div>
-                                        </div>
-                                    </div>
-                                    <div class="space-y-2 text-sm">
-                                        <div class="flex justify-between p-3 bg-gray-800/30 rounded-lg border border-gray-700/30">
-                                            <span class="text-gray-400">📈 外資動向</span>
-                                            <span class="${{item['外資動向'].includes('-') ? 'text-red-400' : 'text-green-400'}} font-mono font-medium">${{item['外資動向']}}</span>
-                                        </div>
-                                        <div class="p-3 bg-gray-800/30 rounded-lg border border-gray-700/30 text-xs text-gray-300 leading-relaxed">
-                                            ${{item['詳細理由']}}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="view-ai-${{wItem.ticker}}" class="view-content hidden">
-                                    <div class="p-4 bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-xl border border-blue-500/20 mb-4">
-                                        <p class="text-xs font-semibold text-cyan-400 mb-2 uppercase tracking-wider">🤖 Perplexity AI 深度分析</p>
-                                        <p class="text-gray-200 leading-relaxed text-sm">${{aiContent}}</p>
-                                    </div>
-                                    <a href="https://www.perplexity.ai/search?q=分析${{item['名稱']}}${{item['代號']}}今日動態" target="_blank" 
-                                       class="block w-full text-center py-3 rounded-xl bg-gradient-to-r from-cyan-600/80 to-purple-600/80 hover:from-cyan-500 hover:to-purple-500 transition-all text-sm font-medium text-white shadow-lg">
-                                        🔍 前往 Perplexity 深度追蹤
-                                    </a>
+                                <div class="text-right">
+                                    <div class="text-sm text-gray-400">喵姆評分</div>
+                                    <div class="text-2xl font-bold ${{scoreClass}}">${{miaoScore}}</div>
                                 </div>
                             </div>
-                        `;
-                        container.appendChild(card);
-                        
-                        // Render Radar Chart
-                        setTimeout(() => {{
-                            const ctx = document.getElementById('chart-' + wItem.ticker);
-                            if (ctx && item.chart_data) {{
-                                new Chart(ctx, {{
-                                    type: 'radar',
-                                    data: {{
-                                        labels: ['籌碼面', '季線趨勢', 'MACD', 'RSI', '綜合分'],
-                                        datasets: [{{
-                                            label: '技術指標',
-                                            data: [
-                                                item.chart_data.chips || 50,
-                                                item.chart_data.tech_ma || 50,
-                                                item.chart_data.tech_macd || 50,
-                                                item.chart_data.tech_rsi || 50,
-                                                item.chart_data.score || 50
-                                            ],
-                                            backgroundColor: scoreColor + '22',
-                                            borderColor: scoreColor,
-                                            borderWidth: 2,
-                                            pointBackgroundColor: scoreColor,
-                                            pointBorderColor: '#fff',
-                                            pointBorderWidth: 1,
-                                            pointRadius: 4
-                                        }}]
-                                    }},
-                                    options: {{
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        scales: {{
-                                            r: {{
-                                                angleLines: {{ color: 'rgba(255, 255, 255, 0.08)' }},
-                                                grid: {{ color: 'rgba(255, 255, 255, 0.08)', circular: true }},
-                                                pointLabels: {{ 
-                                                    color: '#94a3b8', 
-                                                    font: {{ size: 10, family: 'Noto Sans TC' }},
-                                                    padding: 15
-                                                }},
-                                                suggestedMin: 0,
-                                                suggestedMax: 100,
-                                                ticks: {{ display: false }}
-                                            }}
+
+                            <div class="flex border-b border-gray-700/50 mb-4">
+                                <button onclick="switchTab(${{index}}, 'data')" id="tab-data-${{index}}" class="tab-btn active px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200">📊 雷達分析</button>
+                                <button onclick="switchTab(${{index}}, 'ai')" id="tab-ai-${{index}}" class="tab-btn px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200">🤖 AI 觀點</button>
+                            </div>
+
+                            <div id="view-data-${{index}}" class="view-content block">
+                                <div class="chart-container h-52 mb-4">
+                                    <canvas id="chart-${{index}}"></canvas>
+                                    <div class="kirin-center">
+                                        <div class="kirin-value ${{scoreClass}}">${{miaoScore}}</div>
+                                        <div class="kirin-label">喵姆評分</div>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between p-3 bg-gray-800/30 rounded-lg border border-gray-700/30">
+                                        <span class="text-gray-400">📈 外資動向</span>
+                                        <span class="${{item['外資動向'].includes('-') ? 'text-red-400' : 'text-green-400'}} font-mono font-medium">${{item['外資動向']}}</span>
+                                    </div>
+                                    <div class="p-3 bg-gray-800/30 rounded-lg border border-gray-700/30 text-xs text-gray-300 leading-relaxed">
+                                        ${{item['詳細理由']}}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="view-ai-${{index}}" class="view-content hidden">
+                                ${{item.role_analysis ? `
+                                <!-- 衝突警示 -->
+                                ${{item.role_analysis.conflict_intensity > 0.3 ? `
+                                <div class="mb-3 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded-xl">
+                                    <span class="text-yellow-400 text-sm font-medium">⚠️ 訊號衝突 (強度: ${{(item.role_analysis.conflict_intensity * 100).toFixed(0)}}%)</span>
+                                    <p class="text-yellow-200/80 text-xs mt-1">${{item.role_analysis.integration_reason}}</p>
+                                </div>
+                                ` : ''}}
+                                
+                                <!-- 雙層語言摘要 -->
+                                <div class="mb-3 p-4 bg-gradient-to-br from-cyan-900/30 to-blue-900/30 rounded-xl border border-cyan-600/30">
+                                    <p class="text-xs text-cyan-400 font-medium mb-1">🔰 人話版</p>
+                                    <p class="text-gray-200 text-sm leading-relaxed">${{item.role_analysis.summary_human}}</p>
+                                </div>
+                                <div class="mb-3 p-4 bg-gradient-to-br from-purple-900/30 to-indigo-900/30 rounded-xl border border-purple-600/30">
+                                    <p class="text-xs text-purple-400 font-medium mb-1">📊 專業版</p>
+                                    <p class="text-gray-300 text-xs leading-relaxed">${{item.role_analysis.summary_professional}}</p>
+                                </div>
+                                
+                                <!-- 各角色結論 -->
+                                <div class="space-y-2 mb-3">
+                                    ${{item.role_analysis.role_outputs.map(role => `
+                                    <div class="p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="text-sm font-medium text-white">${{role.role_name === '籌碼分析官' ? '📊' : role.role_name === '技術分析官' ? '📉' : '🌐'}} ${{role.role_name}}</span>
+                                            <span class="text-xs px-2 py-1 rounded-full ${{role.role_conclusion === 'bullish' ? 'bg-green-900/50 text-green-400' : role.role_conclusion === 'bearish' ? 'bg-red-900/50 text-red-400' : 'bg-gray-700/50 text-gray-400'}}">
+                                                ${{role.role_conclusion === 'bullish' ? '看多' : role.role_conclusion === 'bearish' ? '看空' : '中立'}} (${{role.confidence}}%)
+                                            </span>
+                                        </div>
+                                        <div class="text-xs text-gray-400">${{role.key_evidence.slice(0, 2).join(' • ')}}</div>
+                                    </div>
+                                    `).join('')}}
+                                </div>
+                                ` : `
+                                <div class="p-4 bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-xl border border-blue-500/20 mb-4">
+                                    <p class="text-xs font-semibold text-cyan-400 mb-2 uppercase tracking-wider">🤖 Perplexity AI 深度分析</p>
+                                    <p class="text-gray-200 leading-relaxed text-sm">${{aiContent}}</p>
+                                </div>
+                                `}}
+                                <a href="https://www.perplexity.ai/search?q=分析${{item['名稱']}}${{item['代號']}}今日動態" target="_blank" 
+                                   class="block w-full text-center py-3 rounded-xl bg-gradient-to-r from-cyan-600/80 to-purple-600/80 hover:from-cyan-500 hover:to-purple-500 transition-all text-sm font-medium text-white shadow-lg">
+                                    🔍 前往 Perplexity 深度追蹤
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                    
+                    // Render Radar Chart with center Kirin Index
+                    const ctx = document.getElementById('chart-' + index);
+                    if (ctx && item.chart_data) {{
+                        new Chart(ctx, {{
+                            type: 'radar',
+                            data: {{
+                                labels: ['籌碼面', '季線趨勢', 'MACD', 'RSI', '綜合分'],
+                                datasets: [{{
+                                    label: '技術指標',
+                                    data: [
+                                        item.chart_data.chips || 50,
+                                        item.chart_data.tech_ma || 50,
+                                        item.chart_data.tech_macd || 50,
+                                        item.chart_data.tech_rsi || 50,
+                                        item.chart_data.score || 50
+                                    ],
+                                    backgroundColor: scoreColor + '22',
+                                    borderColor: scoreColor,
+                                    borderWidth: 2,
+                                    pointBackgroundColor: scoreColor,
+                                    pointBorderColor: '#fff',
+                                    pointBorderWidth: 1,
+                                    pointRadius: 4
+                                }}]
+                            }},
+                            options: {{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {{
+                                    r: {{
+                                        angleLines: {{ color: 'rgba(255, 255, 255, 0.08)' }},
+                                        grid: {{ color: 'rgba(255, 255, 255, 0.08)', circular: true }},
+                                        pointLabels: {{ 
+                                            color: '#94a3b8', 
+                                            font: {{ size: 10, family: 'Noto Sans TC' }},
+                                            padding: 15
                                         }},
-                                        plugins: {{ 
-                                            legend: {{ display: false }}
-                                        }}
+                                        suggestedMin: 0,
+                                        suggestedMax: 100,
+                                        ticks: {{ display: false }}
                                     }}
-                                }});
+                                }},
+                                plugins: {{ 
+                                    legend: {{ display: false }}
+                                }}
                             }}
-                        }}, 0);
-
-                    }} else {{
-                        // B. 待更新卡片 (Pending Card)
-                        const card = document.createElement('div');
-                        card.className = 'glass-card rounded-2xl overflow-hidden opacity-70 border-2 border-dashed border-gray-600';
-                        card.innerHTML = `
-                            <div class="p-8 text-center h-full flex flex-col justify-center items-center">
-                                <h2 class="text-xl font-bold text-gray-400 mb-2">${{wItem.name}} <span class="text-sm font-normal">${{wItem.ticker}}</span></h2>
-                                <div class="text-4xl mb-4">⏳</div>
-                                <p class="text-gray-300 font-medium mb-2">已加入追蹤清單</p>
-                                <p class="text-xs text-gray-500 mb-6">請執行程式以獲取最新分析數據</p>
-                                <div class="text-xs text-gray-600 p-3 bg-black/20 rounded-lg">
-                                    提示：此為靜態網頁，需由後端 Python 更新資料
-                                </div>
-                            </div>
-                        `;
-                        container.appendChild(card);
+                        }});
                     }}
                 }});
             }}
@@ -819,46 +827,57 @@ def generate_index_html(data):
                 document.getElementById('tab-' + tab + '-' + index).classList.add('active');
             }}
             
-            // ========== 追蹤清單管理 ==========
-            let watchlist = JSON.parse(localStorage.getItem('miaomo_watchlist')) || [];
+            renderCards();
             
-            // 初始化：從 stockData 載入現有追蹤
-            if (watchlist.length === 0 && stockData.length > 0) {{
-                stockData.forEach(item => {{
-                    watchlist.push({{ ticker: item['代號'], name: item['名稱'] }});
-                }});
-                saveWatchlist();
+            // ========== 互動式追蹤清單功能 ==========
+            let watchlist = [];
+            
+            // 初始化追蹤清單（從目前顯示的股票）
+            function initWatchlist() {{
+                watchlist = stockData.map(s => ({{ ticker: s['代號'], name: s['名稱'] }}));
+                // 嘗試從 localStorage 載入追蹤清單
+                const saved = localStorage.getItem('miaomuwatchlist');
+                if (saved) {{
+                    try {{
+                        watchlist = JSON.parse(saved);
+                    }} catch(e) {{}}
+                }}
+                renderWatchlist();
             }}
             
             function toggleSidebar() {{
                 document.getElementById('sidebar').classList.toggle('open');
+                document.getElementById('sidebar-overlay').classList.toggle('open');
             }}
             
             function renderWatchlist() {{
-                const container = document.getElementById('watchlistContainer');
+                const container = document.getElementById('watchlist-items');
+                const countEl = document.getElementById('watchlist-count');
                 container.innerHTML = '';
-                document.getElementById('stockCount').textContent = watchlist.length;
+                countEl.textContent = watchlist.length + ' 檔';
                 
-                watchlist.forEach((stock, index) => {{
+                watchlist.forEach((stock, idx) => {{
                     const item = document.createElement('div');
                     item.className = 'watchlist-item';
                     item.innerHTML = `
-                        <span class="text-white">
-                            <span class="text-cyan-400 font-mono">${{stock.ticker}}</span>
-                            <span class="text-gray-400 ml-2">${{stock.name}}</span>
-                        </span>
-                        <button class="watchlist-delete" onclick="removeStock(${{index}})">❌</button>
+                        <div>
+                            <span class="text-white font-medium">${{stock.name}}</span>
+                            <span class="text-gray-500 text-sm ml-2">${{stock.ticker}}</span>
+                        </div>
+                        <button onclick="removeStock(${{idx}})" class="text-red-400 hover:text-red-300 text-sm px-3 py-1 rounded-lg hover:bg-red-900/30 transition">
+                            ✕ 移除
+                        </button>
                     `;
                     container.appendChild(item);
                 }});
             }}
             
             function addStock() {{
-                const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
-                const name = document.getElementById('nameInput').value.trim();
+                const ticker = document.getElementById('new-ticker').value.trim();
+                const name = document.getElementById('new-name').value.trim();
                 
-                if (!ticker) {{
-                    alert('請輸入股票代號');
+                if (!ticker || !name) {{
+                    alert('請輸入股票代號和名稱');
                     return;
                 }}
                 
@@ -868,30 +887,25 @@ def generate_index_html(data):
                     return;
                 }}
                 
-                watchlist.push({{ ticker, name: name || ticker }});
-                saveWatchlist();
+                watchlist.push({{ ticker, name }});
+                localStorage.setItem('miaomuwatchlist', JSON.stringify(watchlist));
                 renderWatchlist();
                 
-                document.getElementById('tickerInput').value = '';
-                document.getElementById('nameInput').value = '';
+                // 清空輸入框
+                document.getElementById('new-ticker').value = '';
+                document.getElementById('new-name').value = '';
             }}
             
-            function removeStock(index) {{
-                if (confirm(`確定要移除 ${{watchlist[index].name}} (${{watchlist[index].ticker}}) 嗎？`)) {{
-                    watchlist.splice(index, 1);
-                    saveWatchlist();
-                    renderWatchlist();
-                }}
+            function removeStock(idx) {{
+                watchlist.splice(idx, 1);
+                localStorage.setItem('miaomuwatchlist', JSON.stringify(watchlist));
+                renderWatchlist();
             }}
             
-            function saveWatchlist() {{
-                localStorage.setItem('miaomo_watchlist', JSON.stringify(watchlist));
-            }}
-            
-            function exportWatchlist() {{
+            function saveWatchlistToFile() {{
                 const data = {{
-                    stocks: watchlist,
-                    updated_at: new Date().toISOString()
+                    updated: new Date().toISOString(),
+                    stocks: watchlist
                 }};
                 const blob = new Blob([JSON.stringify(data, null, 2)], {{ type: 'application/json' }});
                 const url = URL.createObjectURL(blob);
@@ -900,35 +914,10 @@ def generate_index_html(data):
                 a.download = 'watchlist.json';
                 a.click();
                 URL.revokeObjectURL(url);
-                alert('已下載 watchlist.json\\n請將檔案放入專案目錄，下次執行 main.py 時將使用此清單');
+                alert('✅ watchlist.json 已下載！\\n請將檔案放到 stock_analyzer 資料夾，執行 main.py 即可生效。');
             }}
             
-            function importWatchlist(event) {{
-                const file = event.target.files[0];
-                if (!file) return;
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {{
-                    try {{
-                        const data = JSON.parse(e.target.result);
-                        if (data.stocks && Array.isArray(data.stocks)) {{
-                            watchlist = data.stocks;
-                            saveWatchlist();
-                            renderWatchlist();
-                            alert('匯入成功！共 ' + watchlist.length + ' 檔股票');
-                        }} else {{
-                            alert('檔案格式錯誤');
-                        }}
-                    }} catch (err) {{
-                        alert('無法解析 JSON 檔案');
-                    }}
-                }};
-                reader.readAsText(file);
-            }}
-            
-            // 初始化
-            renderWatchlist();
-            renderCards();
+            initWatchlist();
         </script>
     </body>
     </html>
