@@ -271,7 +271,8 @@ def main():
         print(f"⚠️ 使用預設追蹤清單：{len(my_portfolio)} 檔股票")
     
     excel_data = []
-    line_msg = f"🐱 【喵姆 AI 股市偵測站】\n📅 {datetime.now().strftime('%Y-%m-%d')}\n基於多維度指標與 AI 調研的自動化決策系統\n"
+    github_pages_url = "https://kirinmok.github.io/miao-mu-report/"
+    line_msg = f"🐱 【喵姆 AI 股市偵測站】\n📅 {datetime.now().strftime('%Y-%m-%d')}\n👉 {github_pages_url}\n基於多維度指標與 AI 調研的自動化決策系統\n"
     
     # AI Buffer Header
     # AI Buffer Header
@@ -327,7 +328,7 @@ def main():
                 line_msg += f"🐱 喵姆評分: {miao_score} (技術分:{res['評分']})\n"
                 line_msg += f"📊 {res['詳細理由']}\n"
                 line_msg += f"🤖 AI觀點: {ai_search_result}\n"
-                # 不再重複加 Perplexity 連結，只在最後加一次
+                line_msg += f"🔍 即時情報：https://www.perplexity.ai/search?q=分析{stock_name}{stock_id}今日動態\n"
                 
                 # 更新 Buffer 檔案內容
                 buffer_content += f"【{stock_name} ({stock_id})】\n"
@@ -341,8 +342,7 @@ def main():
         
     # 使用 GitHub Pages 公開連結，而不是本地 file:// 連結
     index_html_path = os.path.abspath("index.html")
-    github_pages_url = "https://kirinmok.github.io/miao-mu-report/"
-    line_msg += f"\n🐱 喵姆偵測站已更新：\n👉 {github_pages_url}"
+    line_msg += f"\n🐱 喵姆偵測站已更新"
     
     # Auto Open
     print(f"🚀 自動開啟戰情室: {index_html_path}")
