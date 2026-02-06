@@ -327,7 +327,7 @@ def main():
                 line_msg += f"🐱 喵姆評分: {miao_score} (技術分:{res['評分']})\n"
                 line_msg += f"📊 {res['詳細理由']}\n"
                 line_msg += f"🤖 AI觀點: {ai_search_result}\n"
-                line_msg += f"🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析{stock_name}{stock_id}今日動態\n"
+                # 不再重複加 Perplexity 連結，只在最後加一次
                 
                 # 更新 Buffer 檔案內容
                 buffer_content += f"【{stock_name} ({stock_id})】\n"
@@ -339,8 +339,10 @@ def main():
                 
         time.sleep(1) # 避免 API 速率限制
         
+    # 使用 GitHub Pages 公開連結，而不是本地 file:// 連結
     index_html_path = os.path.abspath("index.html")
-    line_msg += f"\n🐱 喵姆偵測站已更新：\nfile://{index_html_path}"
+    github_pages_url = "https://kirinmok.github.io/miao-mu-report/"
+    line_msg += f"\n🐱 喵姆偵測站已更新：\n👉 {github_pages_url}"
     
     # Auto Open
     print(f"🚀 自動開啟戰情室: {index_html_path}")
