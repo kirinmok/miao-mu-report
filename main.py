@@ -40,25 +40,42 @@ class ProAnalyzer:
         return df
 
     @staticmethod
-    def ask_perplexity_prediction(stock_name, stock_id, score, reasons, revenue_status, chip_status):
+    def ask_perplexity_prediction(stock_name, stock_id, score, reasons, revenue_status, chip_status, close_price):
         if not PERPLEXITY_API_KEY: return None
-        print(f"🔮 AI 正在預測未來: {stock_name}...")
+        print(f"🔮 AI 正在進行深度分析: {stock_name}...")
+        
+        # 嘗試載入外部模板 (恢復專家整段分析)
+        try:
+            template_path = "templates/prompt_perplexity.txt"
+            if os.path.exists(template_path):
+                with open(template_path, "r", encoding="utf-8") as f:
+                    system_prompt = f.read()
+                # 替換變數
+                user_content = f"日期：{datetime.now().strftime('%Y-%m-%d')}\n標的：{stock_name} ({stock_id})\n收盤價：{close_price}\n技術摘要：{reasons} {chip_status} {revenue_status}"
+            else:
+                # Fallback defined inline if file missing
+                system_prompt = "你是一位專業的股市分析師，請針對該股票進行重點分析。"
+                user_content = f"{stock_name} ({stock_id}) 評分:{score} 狀態:{reasons}"
+        except Exception as e:
+            print(f"⚠️ 模板載入失敗: {e}")
+            return None
+
         url = "https://api.perplexity.ai/chat/completions"
         headers = {"Authorization": f"Bearer {PERPLEXITY_API_KEY}", "Content-Type": "application/json"}
         
-        system_prompt = """
-        你是一位視野前瞻的基金經理人。
-        請根據數據進行【未來 3-6 個月的趨勢預判】：
-        1. 成長動能：看好或看淡？
-        2. 潛在風險：供應鏈或庫存隱憂？
-        3. 操作建議：簡短結論。
-        請用繁體中文，條列式回答，控制在 150 字內。
-        """
-        user_content = f"股票：{stock_name}({stock_id})\n評分：{score}\n訊號：{reasons}\n籌碼：{chip_status}\n基本面：{revenue_status}"
-
         try:
-            response = requests.post(url, json={"model": "sonar-pro", "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}]}, headers=headers)
-            if response.status_code == 200: return response.json()['choices'][0]['message']['content']
+            response = requests.post(url, json={
+                "model": "sonar-pro", 
+                "messages": [
+                    {"role": "system", "content": system_prompt}, 
+                    {"role": "user", "content": user_content}
+                ]
+            }, headers=headers)
+            
+            if response.status_code == 200: 
+                return response.json()['choices'][0]['message']['content']
+            else:
+                print(f"❌ API Error: {response.text}")
         except: pass
         return None
 
@@ -236,7 +253,7 @@ def main():
         if res:
             if res['評分'] >= 8 or res['評分'] <= 3:
                 chip_status = f"投信{res['投信動向']}張, 外資{res['外資動向']}張"
-                ai_pred = ProAnalyzer.ask_perplexity_prediction(stock_name, stock_id, res['評分'], res['詳細理由'], res['營收表現'], chip_status)
+                ai_pred = ProAnalyzer.ask_perplexity_prediction(stock_name, stock_id, res['評分'], res['詳細理由'], res['營收表現'], chip_status, res['收盤價'])
                 res['ai_insight'] = ai_pred
             excel_data.append(res)
         time.sleep(3)
@@ -416,8 +433,8 @@ def generate_index_html(data):
 
                             ${{item.ai_insight ? `
                                 <div class="mt-4 p-3 bg-indigo-900/30 border border-indigo-500/30 rounded-lg">
-                                    <p class="text-xs text-indigo-300 font-bold mb-1">🔮 基金經理人預測</p>
-                                    <p class="text-xs text-gray-300 leading-relaxed editable-text">${{item.ai_insight}}</p>
+                                    <p class="text-xs text-indigo-300 font-bold mb-1">🌍 國際戰情與事件分析 (AI 蒐證)</p>
+                                    <p class="text-xs text-gray-300 leading-relaxed editable-text whitespace-pre-line">${item.ai_insight}</p>
                                 </div>
                             ` : ''}}
                         </div>
