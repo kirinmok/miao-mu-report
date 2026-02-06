@@ -429,15 +429,15 @@ def generate_index_html(data):
                                         <div class="bg-gray-800/80 p-3 rounded-lg border border-gray-700/50">
                                             <div class="flex justify-between items-center mb-1">
                                                 <span class="text-sm font-bold text-gray-200">
-                                                    ${{r.role_name === '籌碼分析官' ? '📊' : r.role_name === '技術分析官' ? '📉' : '⚠️'}} ${{r.role_name}}
+                                                    ${{r.role_name === '籌碼分析官' ? '📊' : r.role_name === '技術分析官' ? '📉' : r.role_name === '情境分析官' ? '🌐' : '⚠️'}} ${{r.role_name}}
                                                 </span>
-                                                <span class="text-xs px-2 py-0.5 rounded ${{r.role_conclusion=='bullish'?'bg-green-900 text-green-400':'bg-red-900 text-red-400'}}">
-                                                    ${{r.role_conclusion=='bullish'?'看多':'看空'}}
+                                                <span class="text-xs px-2 py-0.5 rounded ${{r.role_conclusion=='bullish'?'bg-green-900 text-green-400':r.role_conclusion=='bearish'?'bg-red-900 text-red-400':'bg-slate-700 text-slate-300'}}">
+                                                    ${{r.role_conclusion=='bullish'?'看多':r.role_conclusion=='bearish'?'看空':'觀望'}}
                                                 </span>
                                             </div>
-                                            <div class="text-xs text-gray-400 mt-1 pl-1 border-l-2 border-gray-600 editable-text">
-                                                ${{r.role_name === '籌碼分析官' ? chipEvidence : (r.key_evidence && r.key_evidence.length > 0 ? r.key_evidence[0] : '無顯著訊號')}}
-                                            </div>
+                                            <ul class="text-xs text-gray-300 mt-2 pl-4 list-disc space-y-1">
+                                                ${{r.key_evidence && r.key_evidence.length > 0 ? r.key_evidence.map(e => `<li>${{e}}</li>`).join('') : '<li class="text-gray-500">無顯著訊號</li>'}}
+                                            </ul>
                                         </div>
                                     `).join('')}}
                                 </div>
@@ -446,7 +446,7 @@ def generate_index_html(data):
                             ${{item.ai_insight ? `
                                 <div class="mt-4 p-3 bg-indigo-900/30 border border-indigo-500/30 rounded-lg">
                                     <p class="text-xs text-indigo-300 font-bold mb-1">🌍 國際戰情與事件分析 (AI 蒐證)</p>
-                                    <p class="text-xs text-gray-300 leading-relaxed editable-text whitespace-pre-line">${item.ai_insight}</p>
+                                    <p class="text-xs text-gray-300 leading-relaxed editable-text whitespace-pre-line">${{item.ai_insight}}</p>
                                 </div>
                             ` : ''}}
                         </div>
