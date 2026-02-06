@@ -4,6 +4,8 @@
 name: 每日喵姆股市分析
 
 on:
+  push:
+    branches: [main]
   schedule:
     # UTC 07:30 = 台灣時間 15:30
     - cron: '30 7 * * 1-5'  # 週一至週五
