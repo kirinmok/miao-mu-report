@@ -2398,3 +2398,255 @@ Traceback (most recent call last):
   File "/Users/kk/stock_analyzer/main.py", line 7, in <module>
     from dotenv import load_dotenv
 ModuleNotFoundError: No module named 'dotenv'
+2026-02-06 14:35:06.758 | INFO     | FinMind.data.finmind_api:login_by_token:84 - Login success
+2026-02-06 14:35:06.759 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2330
+2026-02-06 14:35:08.513 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2330
+2026-02-06 14:35:09.844 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2317
+2026-02-06 14:35:10.048 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2317
+2026-02-06 14:35:15.111 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 0050
+2026-02-06 14:35:16.105 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 0050
+2026-02-06 14:35:17.921 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 0056
+2026-02-06 14:35:18.130 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 0056
+2026-02-06 14:35:19.723 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 00919
+2026-02-06 14:35:19.977 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 00919
+2026-02-06 14:35:21.672 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 1303
+2026-02-06 14:35:21.947 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 1303
+2026-02-06 14:35:23.772 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2603
+2026-02-06 14:35:24.041 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2603
+2026-02-06 14:35:25.308 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2615
+2026-02-06 14:35:25.505 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2615
+2026-02-06 14:35:26.792 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2609
+2026-02-06 14:35:27.032 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2609
+2026-02-06 14:35:28.327 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2002
+2026-02-06 14:35:28.513 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2002
+2026-02-06 14:35:33.969 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2883
+2026-02-06 14:35:34.246 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2883
+2026-02-06 14:35:38.754 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2891
+2026-02-06 14:35:39.011 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2891
+2026-02-06 14:35:43.805 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2882
+2026-02-06 14:35:44.249 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2882
+2026-02-06 14:35:50.611 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2303
+2026-02-06 14:35:50.791 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2303
+2026-02-06 14:35:56.204 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 3711
+2026-02-06 14:35:56.404 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 3711
+2026-02-06 14:35:58.410 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2454
+2026-02-06 14:35:59.030 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2454
+2026-02-06 14:36:01.547 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 1609
+2026-02-06 14:36:01.820 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 1609
+2026-02-06 14:36:08.536 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 3090
+2026-02-06 14:36:08.866 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 3090
+2026-02-06 14:36:14.134 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 3293
+2026-02-06 14:36:14.419 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 3293
+2026-02-06 14:36:22.382 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 8011
+2026-02-06 14:36:22.820 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 8011
+2026-02-06 14:36:28.529 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2376
+2026-02-06 14:36:28.752 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2376
+2026-02-06 14:36:32.688 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 2379
+2026-02-06 14:36:34.080 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 2379
+2026-02-06 14:36:37.768 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 3034
+2026-02-06 14:36:38.199 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 3034
+2026-02-06 14:36:44.659 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 7749
+2026-02-06 14:36:44.837 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 7749
+2026-02-06 14:36:49.086 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 3035
+2026-02-06 14:36:50.341 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 3035
+2026-02-06 14:37:02.900 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 6197
+2026-02-06 14:37:03.854 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 6197
+2026-02-06 14:37:05.147 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 3680
+2026-02-06 14:37:05.552 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 3680
+2026-02-06 14:37:12.156 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 3088
+2026-02-06 14:37:12.385 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 3088
+2026-02-06 14:37:13.783 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockPrice, data_id: 6579
+2026-02-06 14:37:14.150 | INFO     | FinMind.data.finmind_api:get_data:153 - download Dataset.TaiwanStockInstitutionalInvestorsBuySell, data_id: 6579
+
+🐱 啟動喵姆 AI 股市偵測站 v10.0 (Perplexity 整合版)
+
+✅ 成功讀取 API Key (長度: 53): pplx***XvDp
+📋 已載入追蹤清單：29 檔股票
+⚠️ 檢測到 FinMind Token 無效或是使用預設截斷值（Guest Mode）
+   -> 將使用訪客權限抓取資料 (可能有筆數限制)
+🚀 分析中: 台積電 (2330)...
+🚀 分析中: 鴻海 (2317)...
+🤖 AI 正在研究: 鴻海...
+🚀 分析中: 元大台灣50 (0050)...
+🚀 分析中: 元大高股息 (0056)...
+🚀 分析中: 群益高股息 (00919)...
+🚀 分析中: 南亞 (1303)...
+🚀 分析中: 長榮 (2603)...
+🚀 分析中: 萬海 (2615)...
+🚀 分析中: 陽明 (2609)...
+🚀 分析中: 中鋼 (2002)...
+🤖 AI 正在研究: 中鋼...
+🚀 分析中: 開發金 (2883)...
+🤖 AI 正在研究: 開發金...
+🚀 分析中: 中信金 (2891)...
+🤖 AI 正在研究: 中信金...
+🚀 分析中: 國泰金 (2882)...
+🤖 AI 正在研究: 國泰金...
+🚀 分析中: 聯電 (2303)...
+🤖 AI 正在研究: 聯電...
+🚀 分析中: 日月光投控 (3711)...
+🚀 分析中: 聯發科 (2454)...
+🚀 分析中: 大亞 (1609)...
+🤖 AI 正在研究: 大亞...
+🚀 分析中: 日電貿 (3090)...
+🤖 AI 正在研究: 日電貿...
+🚀 分析中: 鈊象 (3293)...
+🤖 AI 正在研究: 鈊象...
+🚀 分析中: 台通 (8011)...
+🤖 AI 正在研究: 台通...
+🚀 分析中: 技嘉 (2376)...
+🤖 AI 正在研究: 技嘉...
+🚀 分析中: 瑞昱 (2379)...
+🤖 AI 正在研究: 瑞昱...
+🚀 分析中: 聯詠 (3034)...
+🤖 AI 正在研究: 聯詠...
+🚀 分析中: 意騰-KY (7749)...
+🤖 AI 正在研究: 意騰-KY...
+🚀 分析中: 智原 (3035)...
+🤖 AI 正在研究: 智原...
+🚀 分析中: 佳必琪 (6197)...
+🚀 分析中: 家登 (3680)...
+🤖 AI 正在研究: 家登...
+🚀 分析中: 艾訊 (3088)...
+🚀 分析中: 研揚 (6579)...
+🚀 自動開啟戰情室: /Users/kk/stock_analyzer/index.html
+🐱 【喵姆 AI 股市偵測站】
+📅 2026-02-06
+基於多維度指標與 AI 調研的自動化決策系統
+
+==================
+💀 鴻海(2317) $215.0
+🐱 喵姆評分: 1 (技術分:1)
+📊 💸外資提款(-34164張) 📉跌破季線 🐻MACD死叉
+🤖 AI觀點: 【負面】  
+評分1因外資大賣(-34164張)、跌破季線、MACD死叉，技術面偏空；利多：1月營收年增35%創高[1][4][5]；利空：毛利率未明顯提升，外資調節、AI組裝模式評價轉移[2][7][8]。（48字）
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析鴻海2317今日動態
+
+==================
+🔥 中鋼(2002) $20.4
+🐱 喵姆評分: 10 (技術分:9.0)
+📊 💰外資大買(87093張) 📈站上季線 🐂MACD金叉
+🤖 AI觀點: 【正面】
+
+中鋼評分9.0主要源於多重利多匯集：2026年預估轉虧為盈（EPS 0.28元）[1]、2月盤價全面調漲300元反映鋼價回溫[2]、12月單月由虧轉盈[4]、外資持續買超[2]。技術面站穩季線、MACD金叉呈多頭排列[5]。分析師杜金龍預測股價有望挑戰32元[1]。短期面臨年線20元壓力，需觀察鋼價續航力[2]。
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析中鋼2002今日動態
+
+==================
+🔥 開發金(2883) $18.3
+🐱 喵姆評分: 10 (技術分:9.0)
+📊 💰外資大買(104742張) 📈站上季線 🐻MACD死叉
+🤖 AI觀點: 【正面】  
+評分9.0因**外資大買10.4萬張**與**站上季線**利多強勢，蓋過MACD死叉；利多新聞：降息行情下高債券部位獲益、壽險保費回溫，法人目標價18-19元，近期股價站穩16元反轉[1][2][4]。
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析開發金2883今日動態
+
+==================
+🔥 中信金(2891) $51.6
+🐱 喵姆評分: 10 (技術分:9.0)
+📊 💰外資大買(2747張) 📈站上季線 🐻MACD死叉
+🤖 AI觀點: 【正面】  
+評分9.0因**外資大買**、**站上季線**利多壓過MACD死叉，EPS預估上修至3.79元(2025)、2025累計達4.08元創高，本業放貸利差擴張，法人看好2026獲利王、配息優。（48字）[1][3][5]
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析中信金2891今日動態
+
+==================
+🔥 國泰金(2882) $75.7
+🐱 喵姆評分: 10 (技術分:9.0)
+📊 💰外資大買(22692張) 📈站上季線 🐻MACD死叉
+🤖 AI觀點: 【正面】
+
+國泰金評分9.0主要源於：**2026年獲利成長預期強勁**（預估成長兩成達944億元）[2]、**分析師看好目標價71.57元**（較現價74.3元有上漲空間）[5]、**外資持續買超22692張**顯示機構看好[6]。利多包括美國降息預期提振、AI發展助力；MACD死叉為技術面提醒訊號，需留意短期調整風險。
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析國泰金2882今日動態
+
+==================
+🔥 聯電(2303) $61.9
+🐱 喵姆評分: 10 (技術分:9.0)
+📊 💰外資大買(75597張) 📈站上季線 🐻MACD死叉
+🤖 AI觀點: 【正面】  
+評分9.0因外資大買7.5萬張、站上季線利多強勁，蓋過MACD死叉。利多：1月營收創同期新高[5]、EPS/目標價上修至3.68元/50元[1][3]、AI矽光子/12nm合作成長引擎[4]。(48字)
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析聯電2303今日動態
+
+==================
+💀 大亞(1609) $37.65
+🐱 喵姆評分: 1 (技術分:1)
+📊 💸外資提款(-4917張) 📉跌破季線 🐻MACD死叉
+🤖 AI觀點: 【負面】
+
+大亞近期面臨技術面轉弱與籌碼提款。外資1月22日買超9,145張後，隔日隨即賣超6,774張，顯示短線操作；股價從1月23日的42.95元回落至2月5日的38.4元，跌幅達10.6%，跌破季線支撐[1][5][7]。雖2025年營收312.4億元年增3.68%、第三季獲利年增32.7%，無人機與衛星供應鏈題材具長期看好空間[1]，但短線主力籌碼出現大幅換手與調節，技術指標乖離過大，投資人應留意追高風險[1]。
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析大亞1609今日動態
+
+==================
+💀 日電貿(3090) $91.5
+🐱 喵姆評分: 1 (技術分:1)
+📊 💸外資提款(-1035張) 📉跌破季線 🐻MACD死叉
+🤖 AI觀點: 【負面】評分1源於外資提款(-1035張)、跌破季線、MACD死叉等技術利空；利多有1月營收月增37%、AI/漲價題材，但短線籌碼空。（38字）[1][2][3][4][9]
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析日電貿3090今日動態
+
+==================
+💀 鈊象(3293) $682.0
+🐱 喵姆評分: 1 (技術分:1)
+📊 💸外資提款(-3718張) 📉跌破季線 🐻MACD死叉
+🤖 AI觀點: 【負面】
+
+鈊象營收連創歷史新高（1月19.88億元，年增13.6%），但股價從11月高點774元跌至682元，遭外資賣超、主力調節，技術面跌破均線呈空頭排列，基本面利多未能扭轉籌碼面頹勢，法人態度轉向保留。[1][4]
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析鈊象3293今日動態
+
+==================
+💀 台通(8011) $20.1
+🐱 喵姆評分: 1 (技術分:1)
+📊 💸外資提款(-1891張) 📉跌破季線 🐻MACD死叉
+🤖 AI觀點: 【負面】  
+外資連賣超11天(-3486張)、MACD死叉、跌破季線，股價一週-3.1%、自高點-22.2%；營收年減16.56%，無利多新聞。[1][2]
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析台通8011今日動態
+
+==================
+💀 技嘉(2376) $227.5
+🐱 喵姆評分: 1 (技術分:1)
+📊 💸外資提款(-3444張) 📉跌破季線 🐻MACD死叉
+🤖 AI觀點: 【負面】評分1因外資大賣3444張、跌破季線、MACD死叉，近期股價連2跌16%，儘管1月營收331億年增57%利多，但技術面主導賣壓。[1][2][4][8][9]
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析技嘉2376今日動態
+
+==================
+💀 瑞昱(2379) $472.5
+🐱 喵姆評分: 1 (技術分:1)
+📊 💸外資提款(-7609張) 📉跌破季線 🐻MACD死叉
+🤖 AI觀點: 【負面】評分1源於外資大賣(-7609張)、跌破季線、MACD死叉，股價自530元急跌至463元，技術空頭排列。[2][7] 利多：1月營收135億創歷史新高，上半年樂觀；利空：Q4獲利季減22.6%。[2][3]
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析瑞昱2379今日動態
+
+==================
+💀 聯詠(3034) $365.0
+🐱 喵姆評分: 1 (技術分:1)
+📊 💸外資提款(-5052張) 📉跌破季線 🐻MACD死叉
+🤖 AI觀點: 【負面】  
+外資大賣5052張、跌破季線、MACD死叉，評分1因美系外資下修評等至減碼、目標價323元，營收獲利下滑、需求疲軟競爭加劇。[1][2][3]
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析聯詠3034今日動態
+
+==================
+💀 意騰-KY(7749) $399.0
+🐱 喵姆評分: 1 (技術分:3.0)
+📊 外資小賣(-113張) 📉跌破季線 🐻MACD死叉
+🤖 AI觀點: 【負面】  
+評分3.0因**外資小賣**、**跌破季線**、**MACD死叉**，近期股價月跌14.6%、半年跌23.6%，無明顯利多新聞，營收雖增但技術面疲弱壓低評分。[1][2]
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析意騰-KY7749今日動態
+
+==================
+💀 智原(3035) $160.0
+🐱 喵姆評分: 1 (技術分:1)
+📊 💸外資提款(-3056張) 📉跌破季線 🐻MACD死叉
+🤖 AI觀點: 【負面】  
+評分1源於外資提款(-3056張)、跌破季線、MACD死叉，疊加FactSet 2025 EPS下修至2.14元利空；子公司雅特力掛牌雖利多，但本業營收波動、外資調節壓制股價。[1][2][4]
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析智原3035今日動態
+
+==================
+🔥 家登(3680) $400.5
+🐱 喵姆評分: 10 (技術分:9.0)
+📊 💰外資大買(1310張) 📈站上季線 🐻MACD死叉
+🤖 AI觀點: 【正面】評分9.0因**外資連5天大買1311張**、**站上季線**強勢，營收連5月成長，EPS1.56優異，壓過MACD死叉弱訊；無明顯利空，近期利多籌碼集中。[1][2]
+🔍 點此查看即時情報：https://www.perplexity.ai/search?q=分析家登3680今日動態
+
+🐱 喵姆偵測站已更新：
+file:///Users/kk/stock_analyzer/index.html
+✅ Transfer_to_AI.txt 已生成
+✅ LINE 通知已成功發送！
+
+✅ 成功建立 Excel 報表：股市日報_20260206.xlsx
+
+✅ 一頁式戰情室已生成：/Users/kk/stock_analyzer/index.html

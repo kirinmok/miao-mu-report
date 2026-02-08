@@ -8,3 +8,6 @@ pyngrok>=7.0.0
 
 tqdm>=4.0.0
 flask==3.0.0
+yfinance>=0.2.0
+nltk>=3.8.0
+backtrader>=1.9.76.123

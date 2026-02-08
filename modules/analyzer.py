@@ -39,6 +39,44 @@ def ask_perplexity(stock_name, stock_id, risk_summary, behavior_desc, api_key):
     except Exception as e:
         return f"❌ 連線錯誤: {e}"
 
+def ask_ai_custom(query, stock_name, stock_id, api_key):
+    """
+    [Interact] 使用者自訂提問 (Dynamic Q&A)
+    """
+    if not api_key:
+        return "<p class='text-red-400'>❌ 系統未設定 API Key</p>"
+
+    print(f"💬 AI 回答提問: {stock_name} - {query}...")
+    
+    url = "https://api.perplexity.ai/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    system_prompt = f"你是一一位專業的台股分析師。正在分析 {stock_name} ({stock_id})。請針對使用者的提問提供專業、數據佐證的回答。回答請使用 HTML 格式 (可使用 <b>, <ul>, <li>, <p> 等標籤)，不需完整的 html/body。"
+    
+    payload = {
+        "model": "sonar-pro",
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": query}
+        ]
+    }
+
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            content = data['choices'][0]['message']['content']
+            # 簡單清洗 Markdown 標記，避免格式跑掉
+            content = content.replace("```html", "").replace("```", "")
+            return content
+        else:
+            return f"<p class='text-red-400'>❌ API Error: {response.status_code}</p>"
+    except Exception as e:
+        return f"<p class='text-red-400'>❌ 連線錯誤: {e}</p>"
+
 def calculate_indicators(df):
     """
     [Analysis Core] 計算技術指標

@@ -1,0 +1,30 @@
+{
+  "admin": {
+    "cash": 1000000,
+    "holdings": [
+      {
+        "symbol": "2317",
+        "name": "",
+        "shares": 1000,
+        "cost": 100
+      },
+      {
+        "symbol": "2330",
+        "name": "台積電",
+        "shares": 2000,
+        "cost": 650
+      }
+    ]
+  },
+  "family": {
+    "cash": 500000,
+    "holdings": [
+      {
+        "symbol": "0050",
+        "name": "元大台灣50",
+        "shares": 1000,
+        "cost": 150
+      }
+    ]
+  }
+}

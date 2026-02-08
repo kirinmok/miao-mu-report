@@ -98,24 +98,30 @@ class ChipAnalyzer:
         # 外資判斷 (不看價格!)
         if foreign_net_volume > 5000 and positive_days >= 4:
             direction = Direction.BULLISH
-            confidence = 80
-            evidence.append(f"外資連{positive_days}日買超，合計 {foreign_net_volume:,} 張")
+            confidence = 85
+            evidence.append(f"🔥 外資強勢掃貨：連續 {positive_days} 日買超，累計吸籌 {foreign_net_volume:,} 張，吃貨意願極強。")
         elif foreign_net_volume < -5000 and positive_days <= 1:
             direction = Direction.BEARISH
-            confidence = 80
-            evidence.append(f"外資連續倒貨，合計賣超 {abs(foreign_net_volume):,} 張")
+            confidence = 85
+            evidence.append(f"💸 外資大舉提款：單日或連續賣超達 {abs(foreign_net_volume):,} 張，資金明顯撤離，需避開賣壓。")
         else:
             direction = Direction.NEUTRAL
-            confidence = 40
-            evidence.append(f"外資動向不明確 (淨量 {foreign_net_volume:,} 張)")
+            confidence = 45
+            if foreign_net_volume > 0:
+                evidence.append(f"⚖️ 外資小幅買進：淨買 {foreign_net_volume:,} 張，力道有限，尚未形成明確趨勢。")
+            else:
+                evidence.append(f"⚖️ 外資小幅調節：淨賣 {abs(foreign_net_volume):,} 張，觀望氣氛濃厚。")
         
         # 三大法人一致性
         total_inst = foreign_net_volume + trust_net_volume + dealer_net_volume
-        if total_inst > 0 and foreign_net_volume > 0:
-            evidence.append("三大法人同步買超")
-            confidence = min(100, confidence + 10)
+        if total_inst > 0 and foreign_net_volume > 0 and trust_net_volume > 0:
+            evidence.append("🤝 土洋合作：外資與投信同步站在買方，籌碼歸宿集中，有利波段攻擊。")
+            confidence = min(100, confidence + 15)
+        elif total_inst < 0 and foreign_net_volume < 0 and trust_net_volume < 0:
+            evidence.append("📉 土洋對作失敗：外資與投信同步賣超，籌碼鬆動，多方防線潰敗。")
+            confidence = min(100, confidence + 15)
         elif total_inst < 0 and foreign_net_volume > 0:
-            evidence.append("⚠️ 法人內部分歧：外資買、投信/自營賣")
+            evidence.append("⚠️ 籌碼對作：外資雖買，但內資(投信/自營)倒貨，導致股價震盪，需留意內資動向。")
             confidence = max(0, confidence - 10)
         
         return RoleOutput(
@@ -149,33 +155,35 @@ class TechAnalyzer:
         score = 0  # -4 to +4
         
         # 均線位置 (純技術，不猜原因)
+        # 均線位置 (純技術，不猜原因)
         if close > ma60:
             score += 1
-            evidence.append("股價站上季線 ✓")
+            evidence.append("📈 多頭格局：股價穩站季線(生命線)之上，中長線趨勢偏多。")
         else:
             score -= 1
-            evidence.append("股價跌破季線 ✗")
+            evidence.append("📉 空頭壓制：股價跌破季線，上方套牢賣壓沈重，反彈易受阻。")
         
         if close > ma20:
             score += 0.5
+            evidence.append("✅ 短線強勢：股價位於月線之上，短期動能強。")
         else:
             score -= 0.5
-            evidence.append("股價跌破月線")
+            evidence.append("❌ 短線轉弱：股價跌破月線，短期防守失敗。")
         
         # MACD
         if macd_diff > 0:
             score += 1
-            evidence.append("MACD 多頭排列")
+            evidence.append("🐂 MACD 黃金交叉：OSC 翻紅或維持正值，攻擊訊號明確。")
         else:
             score -= 1
-            evidence.append("MACD 死叉")
+            evidence.append("🐻 MACD 死亡交叉：OSC 翻綠或維持負值，修正壓力未除。")
         
         # RSI
         if rsi > 70:
-            evidence.append(f"RSI({rsi:.0f}) 過熱區")
+            evidence.append(f"🔥 RSI 過熱 ({rsi:.0f})：短線乖離過大，隨時可能拉回修正。")
             score -= 0.5
         elif rsi < 30:
-            evidence.append(f"RSI({rsi:.0f}) 超賣區")
+            evidence.append(f"❄️ RSI 超賣 ({rsi:.0f})：短線乖離過大，醞釀跌深反彈。")
             score += 0.5
         
         # 近期走勢
